@@ -3,6 +3,7 @@ package utils
 
 import (
 	"awesomeProject/internal/data"
+	"encoding/json"
 	"github.com/bytedance/sonic"
 	"io/ioutil"
 	"log"
@@ -23,6 +24,10 @@ func LoadCVData(filepath string) (*data.CVData, error) {
 	}
 
 	return &cv, nil
+}
+func UnmarshalAIResponse(response string, cvData *data.CVData) error {
+	// Antar att AI-responsen är ren JSON
+	return json.Unmarshal([]byte(response), cvData)
 }
 
 // ProcessSectionsConcurrently bearbetar olika sektioner av CV-data parallellt
