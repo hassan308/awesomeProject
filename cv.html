@@ -1,0 +1,1718 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, initial-scale=1">
+    <title>Anna Andersson - Mitt Professionella CV 2024</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #34495e;           
+            --secondary-color: #95a5a6;         
+            --accent-color: #3498db;           
+            --background-color: #ecf0f1;       
+            --card-background: #ffffff;         
+            --text-color: #2c3e50;             
+            --border-color: #e0e6e9;           
+            --timeline-color: #bdc3c7;         
+            --shadow-color: rgba(52, 73, 94, 0.1);
+            --hover-color: #f8f9fa;            
+            --success-color: #27ae60;          
+            --danger-color: #e74c3c;           
+            --border-radius: 10px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ecf0f1 0%, #f5f6fa 100%);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+        }
+
+        .cv-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+         
+        .cv-header {
+            background: linear-gradient(to right, #ffffff, #f8f9fa);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .profile-image-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: transform 0.3s ease;
+        }
+
+        .upload-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-image-container:hover .upload-btn {
+            opacity: 1;
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        .name {
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .title {
+            font-size: 1.4rem;
+            color: var(--secondary-color);
+            font-weight: 400;
+        }
+
+         
+        .cv-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+         
+        .cv-section {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .cv-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+         
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--timeline-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: 2px solid var(--card-background);
+        }
+
+        .timeline-content {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            padding: 1.8rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+         
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .skill-item {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            padding: 0.8rem 1.2rem;
+            border-radius: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .skill-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px var(--shadow-color);
+            border-color: var(--accent-color);
+        }
+
+         
+        .contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .contact-item {
+            padding: 0.8rem 1.2rem;
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-color);
+        }
+
+        .contact-item i {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+         
+        .item-controls {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .editable:hover .item-controls {
+            opacity: 1;
+        }
+
+        .edit-icon, .delete-icon {
+            cursor: pointer;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .edit-icon:hover {
+            color: var(--accent-color);
+        }
+
+        .delete-icon:hover {
+            color: var(--danger-color);
+        }
+
+         
+        @media (max-width: 768px) {
+            .cv-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-section {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+         
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .delete-card-btn {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .delete-card-btn:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+         
+        .section-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .delete-section {
+            color: var(--danger-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-section:hover {
+            transform: scale(1.1);
+        }
+
+         
+        .profile-content {
+            padding: 1rem;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-content p {
+            margin-bottom: 0;
+            line-height: 1.8;
+        }
+
+        .profile-content .item-controls {
+            margin-top: 0.5rem;
+        }
+
+         
+        .certification-card .timeline-content {
+            padding: 1.2rem;
+        }
+
+        .certification-card h4 {
+            margin-bottom: 0;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        .certifications-section .timeline-item::before {
+            background: var(--accent-color);
+            opacity: 0.8;
+        }
+
+         
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+         
+        .section-title::first-letter {
+            font-size: 1.4em;
+            margin-right: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+<div class="cv-container" id="cv-content">
+    
+    <header class="cv-header">
+        <div class="profile-section">
+            <div class="profile-image-container">
+                <img src="path/to/image.jpg" alt="Din Profilbild" class="profile-img editable" data-editable="image" id="profile-img">
+                <input type="file" id="image-upload" style="display: none;">
+                <button id="upload-btn" class="upload-btn"><i class="bi bi-upload"></i></button>
+            </div>
+            <div class="profile-info">
+                <h1 class="name editable" data-editable="text">
+                    <span class="editable-text">Anna Andersson</span>
+                    <i class="bi bi-pencil edit-icon"></i>
+                    <i class="bi bi-trash delete-icon"></i>
+                </h1>
+                <h2 class="title editable" data-editable="text">
+                    <span class="editable-text">Software Developer</span>
+                    <i class="bi bi-pencil edit-icon"></i>
+                    <i class="bi bi-trash delete-icon"></i>
+                </h2>
+            </div>
+        </div>
+    </header>
+
+    
+    <div class="cv-grid">
+        
+        <div class="left-column">
+            
+            <section class="cv-section contact-section">
+                <h3 class="section-title">
+                    📱 Kontakt
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="kontakt"></i>
+                        <i class="bi bi-trash delete-section" data-section="kontakt"></i>
+                    </div>
+                </h3>
+                <div class="contact-list" id="kontakt-container">
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <i class="bi bi-geo-alt"></i>
+                        
+                        <span class="editable-text">Stockholm, Sverige</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <i class="bi bi-envelope"></i>
+                        
+                        <span class="editable-text">anna.andersson@example.com</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <i class="bi bi-github"></i>
+                        
+                        <span class="editable-text">/annacode</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <i class="bi bi-linkedin"></i>
+                        
+                        <span class="editable-text">/in/annaandersson</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <span class="editable-text">www.annaandersson.se</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item editable" data-editable="text">
+                        
+                        <i class="bi bi-phone"></i>
+                        
+                        <span class="editable-text">070-123 45 67</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            
+            <section class="cv-section skills-section">
+                <h3 class="section-title">
+                    ⭐ Färdigheter
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="skills"></i>
+                        <i class="bi bi-trash delete-section" data-section="skills"></i>
+                    </div>
+                </h3>
+                <div class="skills-grid" id="skills-container">
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Python</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">JavaScript</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">TypeScript</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">React</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Vue.js</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Node.js</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Django</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Flask</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">SQL</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">MongoDB</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Docker</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Kubernetes</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">AWS</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Azure</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">CI/CD</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Git</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">Agile/Scrum</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="skill-item editable" data-editable="text">
+                        <span class="editable-text">TDD</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            
+            <section class="cv-section languages-section">
+                <h3 class="section-title">
+                    🌍 Språk
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="languages"></i>
+                        <i class="bi bi-trash delete-section" data-section="languages"></i>
+                    </div>
+                </h3>
+                <div class="language-list" id="languages-container">
+                    
+                    <div class="language-item editable" data-editable="text">
+                        <span class="editable-text">Svenska - Modersmål</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="language-item editable" data-editable="text">
+                        <span class="editable-text">Engelska - Flytande</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="language-item editable" data-editable="text">
+                        <span class="editable-text">Tyska - Avancerad</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="language-item editable" data-editable="text">
+                        <span class="editable-text">Franska - Grundläggande</span>
+                        <div class="item-controls">
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+        </div>
+
+        
+        <div class="right-column">
+            
+            <section class="cv-section profile-section">
+                <h3 class="section-title">
+                    👤 Profil
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="profil"></i>
+                        <i class="bi bi-trash delete-section" data-section="profil"></i>
+                    </div>
+                </h3>
+                <div class="profile-content editable" data-editable="description">
+                    <p class="editable-text">Erfaren och passionerad fullstack-utvecklare med över 10 års erfarenhet av att skapa skalbara och användarvänliga webbapplikationer. Stark förespråkare för clean code, testdriven utveckling och kontinuerlig integration. Dedikerad till att hålla mig uppdaterad med de senaste teknologierna och bästa praxis inom branschen.</p>
+                    <div class="item-controls">
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </div>
+                </div>
+            </section>
+
+            
+            <section class="cv-section experience-section">
+                <h3 class="section-title">
+                    💼 Erfarenhet
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="experience"></i>
+                        <i class="bi bi-trash delete-section" data-section="experience"></i>
+                    </div>
+                </h3>
+                <div class="timeline" id="experience-container">
+                    
+                    <div class="timeline-item job-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Lead Developer</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">TechInnovation AB | Jan 2022 - Nuvarande</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Leder ett team på 10 utvecklare i utvecklingen av en molnbaserad SaaS-plattformImplementerade mikroservicearkitektur vilket förbättrade systemets skalbarhet med 200%Introducerade och ledde övergången till Kubernetes, vilket resulterade i 99.99% upptidMentorerar juniora utvecklare och håller regelbundna kunskapsdelningssessioner</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item job-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Senior Fullstack-utvecklare</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">WebSolutions AB | Mar 2019 - Dec 2021</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Ledde utvecklingen av en e-handelsplattform som hanterar över 1 miljon transaktioner per månadOptimerade databasprestanda vilket resulterade i 70% snabbare svarstiderImplementerade en CI/CD-pipeline som reducerade deploymenttiden med 80%Initierade och ledde övergången till TypeScript, vilket minskade buggar i produktionen med 40%</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item job-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Fullstack-utvecklare</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">StartupTech | Jun 2016 - Feb 2019</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Var en nyckelspelare i utvecklingen av företagets flaggskeppsprodukt från grundenImplementerade realtidsfunktionalitet med WebSockets vilket ökade användarengagemanget med 60%Utvecklade och underhöll RESTful API:er för mobila och webbapplikationerArbetade nära UX-teamet för att implementera responsiva och tillgängliga gränssnitt</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item job-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Junior Utvecklare</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">CodeCraft AB | Sep 2014 - May 2016</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Utvecklade och underhöll företagets interna verktyg och dashboardsAssisterade i migreringen av legacy-system till moderna teknologistackarImplementerade enhetstester vilket ökade kodtäckningen från 20% till 80%</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            
+            <section class="cv-section education-section">
+                <h3 class="section-title">
+                    🎓 Utbildning
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="education"></i>
+                        <i class="bi bi-trash delete-section" data-section="education"></i>
+                    </div>
+                </h3>
+                <div class="timeline" id="education-container">
+                    
+                    <div class="timeline-item education-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Master i Datavetenskap</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">Kungliga Tekniska Högskolan | 2012 - 2014</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Specialisering inom distribuerade system och AI. Examensarbete: &#39;Skalbar maskininlärning i distribuerade system&#39; som publicerades i en vetenskaplig tidskrift.</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item education-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Kandidatexamen i Systemvetenskap</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">Stockholms Universitet | 2009 - 2012</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Grundläggande studier i programmering, databaser, systemdesign och projektledning. Vann universitetets &#39;Innovativa IT-lösning&#39; pris 2011.</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item education-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Utbytesstudier i Computer Science</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">Massachusetts Institute of Technology | Hösten 2011</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">Ett semesters utbytesstudier med fokus på avancerade algoritmer och datastrukturer.</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item education-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Tekniskt Gymnasium</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                            <h5 class="editable" data-editable="text">
+                                <span class="editable-text">Norra Real | 2006 - 2009</span>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </h5>
+                            <div class="description editable" data-editable="description">
+                                <p class="editable-text">IT-inriktning med fokus på programmering och webbutveckling. Vann skolans programmeringstävling två år i rad.</p>
+                                <div class="item-controls">
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            
+            <section class="cv-section certifications-section">
+                <h3 class="section-title">
+                    🏆 Certifieringar
+                    <div class="section-controls">
+                        <i class="bi bi-plus-circle add-button" data-section="certifications"></i>
+                        <i class="bi bi-trash delete-section" data-section="certifications"></i>
+                    </div>
+                </h3>
+                <div class="timeline" id="certifications-container">
+                    
+                    <div class="timeline-item certification-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">AWS Certified Solutions Architect</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item certification-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Google Cloud Professional Developer</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item certification-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Microsoft Certified: Azure Developer Associate</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item certification-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Certified Kubernetes Administrator (CKA)</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item certification-card">
+                        <div class="timeline-content">
+                            <div class="content-header">
+                                <h4 class="editable" data-editable="text">
+                                    <span class="editable-text">Certified Scrum Master</span>
+                                    <div class="item-controls">
+                                        <i class="bi bi-pencil edit-icon"></i>
+                                        <i class="bi bi-trash delete-icon"></i>
+                                    </div>
+                                </h4>
+                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                                    <i class="bi bi-trash"></i> Ta bort
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="quill-modal" tabindex="-1" aria-labelledby="quillModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quillModalLabel">Redigera Beskrivning</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Stäng"></button>
+            </div>
+            <div class="modal-body">
+                <div id="quill-editor" style="height: 200px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+                <button type="button" class="btn btn-primary" id="save-quill-btn">Spara</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button id="save-pdf-btn" class="btn btn-primary">
+    <i class="bi bi-file-earmark-pdf me-2"></i>Spara som PDF
+    <span id="loading-indicator" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+</button>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        let quill; 
+        let currentElement = null; 
+        const quillModal = new bootstrap.Modal(document.getElementById('quill-modal'));
+
+        
+        quill = new Quill('#quill-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],        
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']                                         
+                ]
+            }
+        });
+
+        
+        function initializeEditables() {
+            document.querySelectorAll('.editable').forEach(el => {
+                el.querySelectorAll('.edit-icon').forEach(icon => {
+                    icon.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        const parent = this.parentElement.querySelector('.editable-text');
+                        const editType = el.getAttribute('data-editable');
+                        if (editType === 'description') {
+                            currentElement = el.querySelector('.editable-text');
+                            
+                            const content = currentElement.innerHTML.trim();
+                            quill.root.innerHTML = content;
+                            quillModal.show();
+                        } else if (editType === 'image') {
+                            document.getElementById('image-upload').click();
+                        } else if (editType === 'text') {
+                            
+                            if (el.closest('#kontakt-container')) {
+                                editContactField(el);
+                            } else {
+                                enableInlineEdit(el, editType);
+                            }
+                        }
+                    });
+                });
+
+                el.querySelectorAll('.delete-icon').forEach(icon => {
+                    icon.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        const textElement = icon.closest('.editable');
+                        if (textElement) {
+                            textElement.remove();
+                        }
+                    });
+                });
+            });
+
+            
+            document.querySelectorAll('.delete-section').forEach(deleteBtn => {
+                deleteBtn.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    const section = this.closest('section');
+                    const mandatorySections = ['Kontakt', 'Profil'];
+                    const sectionTitle = section.querySelector('.section-title').textContent.trim();
+                    
+                    if (mandatorySections.some(title => sectionTitle.includes(title))) {
+                        alert('Denna sektion kan inte tas bort eftersom den är obligatorisk.');
+                        return;
+                    }
+                    section.remove();
+                });
+            });
+
+            
+            document.querySelectorAll('.remove-job-btn, .remove-education-btn').forEach(btn => {
+                btn.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    const card = this.closest('.job-card, .education-card');
+                    const cardTitle = card.querySelector('.h5').textContent.trim();
+                    
+                    if (confirm(`Är du säker på att du vill ta bort "${cardTitle}"?`)) {
+                        card.remove();
+                    }
+                });
+            });
+
+            
+            document.querySelectorAll('.delete-card-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.job-card, .education-card');
+                    card.remove();
+                });
+            });
+        }
+
+        
+        function editContactField(element) {
+            
+            const link = element.querySelector('a');
+            const icon = element.querySelector('i.bi-trash.delete-icon');
+            let href = '';
+            let linkText = '';
+
+            if (link) {
+                href = link.getAttribute('href');
+                linkText = link.textContent;
+            } else {
+                
+                linkText = element.querySelector('.editable-text').textContent.trim();
+            }
+
+            
+            element.querySelector('.edit-icon').style.display = 'none';
+            element.querySelector('.delete-icon').style.display = 'none';
+
+            
+            const form = document.createElement('div');
+            if (link) {
+                form.innerHTML = `
+                        <div class="mb-2">
+                            <label for="edit-text" class="form-label">Text</label>
+                            <input type="text" id="edit-text" class="form-control" value="${linkText}">
+                        </div>
+                        <div class="mb-2">
+                            <label for="edit-href" class="form-label">URL</label>
+                            <input type="url" id="edit-href" class="form-control" value="${href}">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="save-contact-btn">Spara</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancel-contact-btn">Avbryt</button>
+                    `;
+            } else {
+                form.innerHTML = `
+                        <div class="mb-2">
+                            <label for="edit-text" class="form-label">Text</label>
+                            <input type="text" id="edit-text" class="form-control" value="${linkText}">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="save-contact-btn">Spara</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancel-contact-btn">Avbryt</button>
+                    `;
+            }
+
+            
+            element.innerHTML = '';
+            element.appendChild(form);
+
+            
+            document.getElementById('save-contact-btn').addEventListener('click', function() {
+                const newText = document.getElementById('edit-text').value.trim();
+                if (link) {
+                    const newHref = document.getElementById('edit-href').value.trim();
+                    if (newHref) {
+                        element.innerHTML = `
+                                <a href="${newHref}" target="_blank">${newText}</a>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>
+                            `;
+                    } else {
+                        element.innerHTML = `
+                                <span class="editable-text">${newText}</span>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>
+                            `;
+                    }
+                } else {
+                    
+                    element.innerHTML = `
+                            <span class="editable-text">${newText}</span>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        `;
+                }
+                initializeEditables();
+            });
+
+            
+            document.getElementById('cancel-contact-btn').addEventListener('click', function() {
+                if (link) {
+                    element.innerHTML = `
+                            <a href="${href}" target="_blank">${linkText}</a>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        `;
+                } else {
+                    element.innerHTML = `
+                            <span class="editable-text">${linkText}</span>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        `;
+                }
+                initializeEditables();
+            });
+        }
+
+        
+        function enableInlineEdit(element, editType) {
+            
+            const editIcon = element.querySelector('.edit-icon');
+            const deleteIcon = element.querySelector('.delete-icon');
+            if (editIcon) editIcon.style.display = 'none';
+            if (deleteIcon) deleteIcon.style.display = 'none';
+
+            
+            const originalContent = element.querySelector('.editable-text').textContent.trim();
+            let input;
+
+            if (editType === 'text') {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = originalContent;
+                input.className = 'form-control';
+            } else if (editType === 'description') {
+                input = document.createElement('textarea');
+                input.rows = 3;
+                input.className = 'form-control';
+                input.value = originalContent;
+            }
+
+            if (input) {
+                element.innerHTML = '';
+                element.appendChild(input);
+                input.focus();
+
+                
+                function saveEdit() {
+                    const newValue = input.value.trim();
+                    if (newValue === '') {
+                        element.remove();
+                    } else {
+                        if (editType === 'description') {
+                            element.innerHTML = `
+                                    <span class="editable-text">${newValue}</span>
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                `;
+                        } else {
+                            element.innerHTML = `
+                                    <span class="editable-text">${newValue}</span>
+                                    <i class="bi bi-pencil edit-icon"></i>
+                                    <i class="bi bi-trash delete-icon"></i>
+                                `;
+                        }
+                        
+                        if (editType === 'text' || editType === 'description') {
+                            if (editIcon) editIcon.style.display = '';
+                            if (deleteIcon) deleteIcon.style.display = '';
+                        }
+                        initializeEditables();
+                    }
+                }
+
+                input.addEventListener('blur', saveEdit);
+
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && editType === 'text') {
+                        e.preventDefault(); 
+                        saveEdit();
+                    }
+                });
+            }
+        }
+
+        
+        document.getElementById('save-quill-btn').addEventListener('click', function() {
+            if (currentElement) {
+                const newContent = quill.root.innerHTML.trim();
+                
+                currentElement.innerHTML = newContent;
+                
+                currentElement.insertAdjacentHTML('afterend',
+                    `<i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>`
+                );
+                quillModal.hide();
+                currentElement = null;
+                initializeEditables();
+            }
+        });
+
+        
+        function addNewElement(section) {
+            let container, newElement;
+            try {
+                switch(section) {
+                    case 'skills':
+                        container = document.getElementById('skills-container');
+                        if (!container) throw new Error('Skills container not found');
+                        newElement = document.createElement('span');
+                        newElement.className = 'badge skill-badge editable';
+                        newElement.setAttribute('data-editable', 'text');
+                        newElement.innerHTML = `
+                            <span class="editable-text">Ny färdighet</span>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        `;
+                        break;
+                    case 'languages':
+                        container = document.getElementById('languages-container');
+                        newElement = document.createElement('li');
+                        newElement.className = 'editable';
+                        newElement.setAttribute('data-editable', 'text');
+                        newElement.innerHTML =
+                            `<span class="editable-text">Nytt språk - Nivå</span>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>`;
+                        break;
+                    case 'experience':
+                        container = document.getElementById('experience-container');
+                        newElement = createJobCard();
+                        break;
+                    case 'education':
+                        container = document.getElementById('education-container');
+                        newElement = createEducationCard();
+                        break;
+                    case 'projects':
+                        container = document.getElementById('projects-container');
+                        newElement = document.createElement('li');
+                        newElement.className = 'editable';
+                        newElement.setAttribute('data-editable', 'text');
+                        newElement.innerHTML =
+                            `<span class="editable-text">Nytt projekt eller prestation</span>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>`;
+                        break;
+                    case 'certifications':
+                        container = document.getElementById('certifications-container');
+                        newElement = createCertificationCard();
+                        break;
+                    case 'kontakt':
+                        container = document.getElementById('kontakt-container');
+                        newElement = document.createElement('li');
+                        newElement.className = 'editable';
+                        newElement.setAttribute('data-editable', 'text');
+                        newElement.innerHTML =
+                            `<i class="bi bi-envelope-fill me-2"></i>
+                                <span class="editable-text">Ny Kontakt</span>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>`;
+                        break;
+                    case 'profil':
+                        container = document.querySelector('.sidebar > section:nth-child(1)'); 
+                        newElement = document.createElement('p');
+                        newElement.className = 'editable';
+                        newElement.setAttribute('data-editable', 'text');
+                        newElement.innerHTML =
+                            `<span class="editable-text">Ny profiltext</span>
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>`;
+                        break;
+                    case 'new_section': 
+                        container = document.querySelector('.row');
+                        newElement = createNewSection();
+                        break;
+                    default:
+                        alert('Okänd sektion: ' + section);
+                        return;
+                }
+
+                if (container && newElement) {
+                    container.appendChild(newElement);
+                    initializeEditables();
+                } else {
+                    throw new Error('Container eller element kunde inte skapas');
+                }
+            } catch (error) {
+                console.error('Fel vid skapande av nytt element:', error);
+                alert('Ett fel uppstod när elementet skulle läggas till. Försök igen.');
+            }
+        }
+
+        
+        function createJobCard() {
+            const card = document.createElement('div');
+            card.className = 'timeline-item job-card';
+            card.innerHTML = `
+                <div class="timeline-content">
+                    <div class="content-header">
+                        <h4 class="editable" data-editable="text">
+                            <span class="editable-text">Ny Erfarenhet</span>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </h4>
+                        <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                            <i class="bi bi-trash"></i> Ta bort
+                        </button>
+                    </div>
+                    <h5 class="editable" data-editable="text">
+                        <span class="editable-text">Företag | Startår - Slutår</span>
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </h5>
+                    <div class="description editable" data-editable="description">
+                        <p class="editable-text">Beskrivning av arbetsuppgifter och prestationer.</p>
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </div>
+                </div>`;
+            
+            
+            const deleteBtn = card.querySelector('.delete-card-btn');
+            deleteBtn.addEventListener('click', () => card.remove());
+            
+            return card;
+        }
+
+        
+        function createEducationCard() {
+            const card = document.createElement('div');
+            card.className = 'timeline-item education-card';
+            card.innerHTML = `
+                <div class="timeline-content">
+                    <div class="content-header">
+                        <h4 class="editable" data-editable="text">
+                            <span class="editable-text">Ny Utbildning</span>
+                            <i class="bi bi-pencil edit-icon"></i>
+                            <i class="bi bi-trash delete-icon"></i>
+                        </h4>
+                        <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                            <i class="bi bi-trash"></i> Ta bort
+                        </button>
+                    </div>
+                    <h5 class="editable" data-editable="text">
+                        <span class="editable-text">Lärosäte | Startår - Slutår</span>
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </h5>
+                    <div class="description editable" data-editable="description">
+                        <p class="editable-text">Beskrivning av utbildningen.</p>
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </div>
+                </div>`;
+            
+            
+            const deleteBtn = card.querySelector('.delete-card-btn');
+            deleteBtn.addEventListener('click', () => card.remove());
+            
+            return card;
+        }
+
+        
+        function createNewSection() {
+            const section = document.createElement('section');
+            section.className = 'mb-4';
+            section.innerHTML =
+                `<h2 class="h5 section-title">
+                        🆕 Ny Sektion
+                        <div>
+                            <i class="bi bi-plus-circle add-button" data-section="new_section"></i>
+                            <i class="bi bi-trash delete-section" data-section="new_section"></i>
+                        </div>
+                    </h2>
+                    <p class="editable" data-editable="text">
+                        <span class="editable-text">Ny sektionens innehåll.</span>
+                        <i class="bi bi-pencil edit-icon"></i>
+                        <i class="bi bi-trash delete-icon"></i>
+                    </p>`;
+            return section;
+        }
+
+        
+        function isSectionEmpty(section) {
+            const content = section.querySelector('.card-body, ul, .d-flex');
+            return content ? content.children.length === 0 : true;
+        }
+
+        
+        initializeEditables();
+
+        
+        document.getElementById('upload-btn').addEventListener('click', function() {
+            document.getElementById('image-upload').click();
+        });
+
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-img').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        
+        function initializePDFSave() {
+            const saveButton = document.getElementById('save-pdf-btn');
+            const loadingIndicator = document.getElementById('loading-indicator');
+
+            saveButton.addEventListener('click', async function() {
+                try {
+                    loadingIndicator.classList.remove('d-none');
+                    saveButton.disabled = true;
+
+                    const element = document.getElementById('cv-content');
+                    const originalOverflow = document.body.style.overflow;
+                    document.body.style.overflow = 'visible';
+
+                    
+                    const elementsToHide = document.querySelectorAll(
+                        '.edit-icon, .delete-icon, .add-button, .delete-section, .delete-card-btn, .upload-btn, .item-controls, #save-pdf-btn'
+                    );
+                    
+                    
+                    const originalStyles = new Map();
+                    elementsToHide.forEach(el => {
+                        originalStyles.set(el, el.style.display);
+                        el.style.display = 'none';
+                    });
+
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        windowWidth: 1024,
+                        windowHeight: element.scrollHeight
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jspdf.jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                    let heightLeft = pdfHeight;
+                    let position = 0;
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - pdfHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    await pdf.save('mitt_cv.pdf');
+
+                } catch (error) {
+                    console.error('PDF generation error:', error);
+                } finally {
+                    
+                    elementsToHide.forEach(el => {
+                        const originalStyle = originalStyles.get(el);
+                        if (el.id === 'save-pdf-btn') {
+                            el.style.display = 'block';
+                            el.style.position = 'fixed';
+                            el.style.bottom = '2rem';
+                            el.style.right = '2rem';
+                            el.style.zIndex = '1000';
+                        } else {
+                            el.style.display = originalStyle || '';
+                        }
+                    });
+
+                    
+                    document.body.style.overflow = originalOverflow;
+                    loadingIndicator.classList.add('d-none');
+                    saveButton.disabled = false;
+
+                    
+                    initializeEditables();
+                }
+            });
+        }
+
+        initializePDFSave();
+
+        document.addEventListener('click', function(e) {
+            
+            if (e.target && e.target.classList.contains('add-button')) {
+                const section = e.target.getAttribute('data-section');
+                addNewElement(section);
+            }
+        });
+
+        
+        function createCertificationCard() {
+            const card = document.createElement('div');
+            card.className = 'timeline-item certification-card';
+            card.innerHTML = `
+                <div class="timeline-content">
+                    <div class="content-header">
+                        <h4 class="editable" data-editable="text">
+                            <span class="editable-text">Ny Certifiering</span>
+                            <div class="item-controls">
+                                <i class="bi bi-pencil edit-icon"></i>
+                                <i class="bi bi-trash delete-icon"></i>
+                            </div>
+                        </h4>
+                        <button class="btn btn-outline-danger btn-sm delete-card-btn">
+                            <i class="bi bi-trash"></i> Ta bort
+                        </button>
+                    </div>
+                </div>`;
+            
+            
+            const deleteBtn = card.querySelector('.delete-card-btn');
+            deleteBtn.addEventListener('click', () => card.remove());
+            
+            return card;
+        }
+
+    });
+</script>
+</body>
+</html>
