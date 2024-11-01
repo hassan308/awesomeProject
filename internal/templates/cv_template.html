@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, initial-scale=1">
-    <title>{{ .PersonligInfo.Namn }} - Mitt Professionella CV 2024</title>
+    <title>
+        {{- with .PersonligInfo -}}
+            {{ .Namn }} - Mitt Professionella CV 2024
+        {{- end -}}
+    </title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
@@ -21,42 +25,57 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --primary-color: #34495e;          /* Mörkblå/grå */
-            --secondary-color: #95a5a6;        /* Ljusgrå */
-            --accent-color: #3498db;          /* Subtil blå */
-            --background-color: #ecf0f1;      /* Ljus bakgrund */
-            --card-background: #ffffff;        /* Vit */
-            --text-color: #2c3e50;            /* Mörkblå text */
-            --border-color: #e0e6e9;          /* Ljusgrå border */
-            --timeline-color: #bdc3c7;        /* Mellangrå för timeline */
-            --shadow-color: rgba(52, 73, 94, 0.1);
-            --hover-color: #f8f9fa;           /* Ljus hover färg */
-            --success-color: #27ae60;         /* Grön för success */
-            --danger-color: #e74c3c;          /* Röd för danger */
+            --primary-color: #34495e;      /* Mjukare mörkblå */
+            --secondary-color: #7f8c8d;    /* Neutral grå */
+            --accent-color: #3498db;       /* Ljusblå */
+            --header-gradient-start: #4b6cb7;  /* Mjukare gradient start */
+            --header-gradient-end: #182848;    /* Mjukare gradient slut */
+            --background-color: #f7fafc;   /* Ljus bakgrund */
+            --card-background: #ffffff;    /* Vit */
+            --text-color: #2d3748;        /* Mörkgrå text */
+            --border-color: #e2e8f0;      /* Subtil gräns */
+            --hover-color: #edf2f7;       /* Ljus hover */
+            --success-color: #2f855a;     /* Mörkgrön */
+            --danger-color: #c53030;      /* Mörkröd */
+            --timeline-color: #a0aec0;    /* Mellangrå för timeline */
+            --shadow-color: rgba(26, 54, 93, 0.1); /* Subtil skugga */
+
             --border-radius: 10px;
+            --card-padding: 1.8rem;
+            --transition-speed: 0.3s;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+            --header-bg-start: #f8fafc;  /* Mycket ljusare start */
+            --header-bg-end: #e2e8f0;    /* Ljusgrå slut */
+            --header-text: #2d3748;      /* Mörkgrå text */
+            --header-subtext: #4a5568;   /* Lite ljusare text för undertitel */
         }
 
         body {
-            background: linear-gradient(135deg, #ecf0f1 0%, #f5f6fa 100%);
+            background: linear-gradient(135deg, var(--background-color) 0%, #ffffff 100%);
             color: var(--text-color);
             font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
         .cv-container {
             max-width: 1200px;
-            margin: 2rem auto;
-            padding: 2rem;
+            margin: 3rem auto;
+            padding: 2.5rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
 
         /* Header styling */
         .cv-header {
-            background: linear-gradient(to right, #ffffff, #f8f9fa);
-            padding: 2.5rem;
+            background: linear-gradient(135deg, var(--header-bg-start), var(--header-bg-end));
+            padding: 3rem;
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 15px var(--shadow-color);
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
+            color: var(--header-text);
         }
 
         .profile-section {
@@ -130,15 +149,17 @@
         .cv-section {
             background: var(--card-background);
             border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px var(--shadow-color);
+            padding: var(--card-padding);
+            margin-bottom: 2rem;
             border: 1px solid var(--border-color);
-            transition: transform 0.3s ease;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-speed) ease, 
+                        box-shadow var(--transition-speed) ease;
         }
 
         .cv-section:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
 
         .section-title {
@@ -188,11 +209,16 @@
         }
 
         .timeline-content {
-            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            background: linear-gradient(135deg, var(--card-background) 0%, var(--hover-color) 100%);
             padding: 1.8rem;
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 15px var(--shadow-color);
             border: 1px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+        }
+
+        .timeline-content:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px var(--shadow-color);
         }
 
         /* Skills grid */
@@ -224,17 +250,18 @@
         }
 
         .contact-item {
-            padding: 0.8rem 1.2rem;
-            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: var(--card-background);
             border-radius: var(--border-radius);
-            margin-bottom: 0.8rem;
             border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
         }
 
         .contact-item:hover {
-            transform: translateX(5px);
             border-color: var(--accent-color);
+            transform: translateX(5px);
         }
 
         .contact-item i {
@@ -362,6 +389,21 @@
             font-size: 1.4em;
             margin-right: 0.3rem;
         }
+
+        /* Uppdatera knappstil */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            box-shadow: var(--box-shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -370,21 +412,25 @@
     <header class="cv-header">
         <div class="profile-section">
             <div class="profile-image-container">
-                <img src="{{ .PersonligInfo.Bild }}" alt="Din Profilbild" class="profile-img editable" data-editable="image" id="profile-img">
+                {{- with .PersonligInfo -}}
+                    <img src="{{ .Bild }}" alt="Din Profilbild" class="profile-img editable" data-editable="image" id="profile-img">
+                {{- end -}}
                 <input type="file" id="image-upload" style="display: none;">
                 <button id="upload-btn" class="upload-btn"><i class="bi bi-upload"></i></button>
             </div>
             <div class="profile-info">
+                {{- with .PersonligInfo -}}
                 <h1 class="name editable" data-editable="text">
-                    <span class="editable-text">{{ .PersonligInfo.Namn }}</span>
+                    <span class="editable-text">{{ .Namn }}</span>
                     <i class="bi bi-pencil edit-icon"></i>
                     <i class="bi bi-trash delete-icon"></i>
                 </h1>
                 <h2 class="title editable" data-editable="text">
-                    <span class="editable-text">{{ .PersonligInfo.Titel }}</span>
+                    <span class="editable-text">{{ .Titel }}</span>
                     <i class="bi bi-pencil edit-icon"></i>
                     <i class="bi bi-trash delete-icon"></i>
                 </h2>
+                {{- end -}}
             </div>
         </div>
     </header>
@@ -403,26 +449,18 @@
                     </div>
                 </h3>
                 <div class="contact-list" id="kontakt-container">
-                    {{ range $key, $value := .PersonligInfo.Kontakt }}
+                    {{- range .PersonligInfo.Kontakt -}}
                     <div class="contact-item editable" data-editable="text">
-                        {{ if eq $key "linkedin" }}
-                        <i class="bi bi-linkedin"></i>
-                        {{ else if eq $key "github" }}
-                        <i class="bi bi-github"></i>
-                        {{ else if eq $key "email" }}
-                        <i class="bi bi-envelope"></i>
-                        {{ else if eq $key "telefon" }}
-                        <i class="bi bi-phone"></i>
-                        {{ else if eq $key "adress" }}
-                        <i class="bi bi-geo-alt"></i>
-                        {{ end }}
-                        <span class="editable-text">{{ $value }}</span>
+                        <div class="contact-row">
+                            <span class="contact-icon">{{ .Ikon }}</span>
+                            <span class="editable-text">{{ .Varde }}</span>
+                        </div>
                         <div class="item-controls">
                             <i class="bi bi-pencil edit-icon"></i>
                             <i class="bi bi-trash delete-icon"></i>
                         </div>
                     </div>
-                    {{ end }}
+                    {{- end -}}
                 </div>
             </section>
 
@@ -436,15 +474,15 @@
                     </div>
                 </h3>
                 <div class="skills-grid" id="skills-container">
-                    {{ range .Fardigheter }}
+                    {{- range $index, $fardighet := .Fardigheter -}}
                     <div class="skill-item editable" data-editable="text">
-                        <span class="editable-text">{{ . }}</span>
+                        <span class="editable-text">{{ $fardighet }}</span>
                         <div class="item-controls">
                             <i class="bi bi-pencil edit-icon"></i>
                             <i class="bi bi-trash delete-icon"></i>
                         </div>
                     </div>
-                    {{ end }}
+                    {{- end -}}
                 </div>
             </section>
 
@@ -501,12 +539,12 @@
                     </div>
                 </h3>
                 <div class="timeline" id="experience-container">
-                    {{ range .Arbetslivserfarenhet }}
+                    {{- range $index, $erfarenhet := .Arbetslivserfarenhet -}}
                     <div class="timeline-item job-card">
                         <div class="timeline-content">
                             <div class="content-header">
                                 <h4 class="editable" data-editable="text">
-                                    <span class="editable-text">{{ .Titel }}</span>
+                                    <span class="editable-text">{{ $erfarenhet.Titel }}</span>
                                     <div class="item-controls">
                                         <i class="bi bi-pencil edit-icon"></i>
                                         <i class="bi bi-trash delete-icon"></i>
@@ -517,14 +555,14 @@
                                 </button>
                             </div>
                             <h5 class="editable" data-editable="text">
-                                <span class="editable-text">{{ .Foretag }} | {{ .Period }}</span>
+                                <span class="editable-text">{{ $erfarenhet.Foretag }} | {{ $erfarenhet.Period }}</span>
                                 <div class="item-controls">
                                     <i class="bi bi-pencil edit-icon"></i>
                                     <i class="bi bi-trash delete-icon"></i>
                                 </div>
                             </h5>
                             <div class="description editable" data-editable="description">
-                                <p class="editable-text">{{ range .Beskrivning }}{{ . }}{{ end }}</p>
+                                <p class="editable-text">{{ range $erfarenhet.Beskrivning }}{{ . }}{{ end }}</p>
                                 <div class="item-controls">
                                     <i class="bi bi-pencil edit-icon"></i>
                                     <i class="bi bi-trash delete-icon"></i>
@@ -532,7 +570,7 @@
                             </div>
                         </div>
                     </div>
-                    {{ end }}
+                    {{- end -}}
                 </div>
             </section>
 
@@ -546,7 +584,7 @@
                     </div>
                 </h3>
                 <div class="timeline" id="education-container">
-                    {{ range .Utbildning }}
+                    {{- range .Utbildning -}}
                     <div class="timeline-item education-card">
                         <div class="timeline-content">
                             <div class="content-header">
@@ -557,9 +595,6 @@
                                         <i class="bi bi-trash delete-icon"></i>
                                     </div>
                                 </h4>
-                                <button class="btn btn-outline-danger btn-sm delete-card-btn">
-                                    <i class="bi bi-trash"></i> Ta bort
-                                </button>
                             </div>
                             <h5 class="editable" data-editable="text">
                                 <span class="editable-text">{{ .Skola }} | {{ .Period }}</span>
@@ -568,16 +603,20 @@
                                     <i class="bi bi-trash delete-icon"></i>
                                 </div>
                             </h5>
+                            {{- if .Beskrivning -}}
                             <div class="description editable" data-editable="description">
-                                <p class="editable-text">{{ .Beskrivning }}</p>
+                                {{- range .Beskrivning -}}
+                                <p class="editable-text">{{ . }}</p>
+                                {{- end -}}
                                 <div class="item-controls">
                                     <i class="bi bi-pencil edit-icon"></i>
                                     <i class="bi bi-trash delete-icon"></i>
                                 </div>
                             </div>
+                            {{- end -}}
                         </div>
                     </div>
-                    {{ end }}
+                    {{- end -}}
                 </div>
             </section>
 

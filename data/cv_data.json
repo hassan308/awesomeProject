@@ -1,0 +1,113 @@
+{
+    "personlig_info": {
+        "namn": "Anna Andersson",
+        "titel": "Software Developer",
+        "bild": "path/to/image.jpg",
+        "kontakt": {
+            "email": "anna.andersson@example.com",
+            "telefon": "070-123 45 67",
+            "adress": "Stockholm, Sverige",
+            "linkedin": "/in/annaandersson",
+            "github": "/annacode",
+            "portfolio": "www.annaandersson.se"
+        }
+    },
+  "fardigheter": [
+      "Python", "JavaScript", "TypeScript", "React", "Vue.js", "Node.js",
+      "Django", "Flask", "SQL", "MongoDB", "Docker", "Kubernetes",
+      "AWS", "Azure", "CI/CD", "Git", "Agile/Scrum", "TDD"
+  ],
+  "sprak": [
+      {"sprak": "Svenska", "niva": "Modersmål"},
+      {"sprak": "Engelska", "niva": "Flytande"},
+      {"sprak": "Tyska", "niva": "Avancerad"},
+      {"sprak": "Franska", "niva": "Grundläggande"}
+  ],
+  "profil": "Erfaren och passionerad fullstack-utvecklare med över 10 års erfarenhet av att skapa skalbara och användarvänliga webbapplikationer. Stark förespråkare för clean code, testdriven utveckling och kontinuerlig integration. Dedikerad till att hålla mig uppdaterad med de senaste teknologierna och bästa praxis inom branschen.",
+  "arbetslivserfarenhet": [
+      {
+          "titel": "Lead Developer",
+          "foretag": "TechInnovation AB",
+          "period": "Jan 2022 - Nuvarande",
+          "beskrivning": [
+              "Leder ett team på 10 utvecklare i utvecklingen av en molnbaserad SaaS-plattform",
+              "Implementerade mikroservicearkitektur vilket förbättrade systemets skalbarhet med 200%",
+              "Introducerade och ledde övergången till Kubernetes, vilket resulterade i 99.99% upptid",
+              "Mentorerar juniora utvecklare och håller regelbundna kunskapsdelningssessioner"
+          ]
+      },
+      {
+          "titel": "Senior Fullstack-utvecklare",
+          "foretag": "WebSolutions AB",
+          "period": "Mar 2019 - Dec 2021",
+          "beskrivning": [
+              "Ledde utvecklingen av en e-handelsplattform som hanterar över 1 miljon transaktioner per månad",
+              "Optimerade databasprestanda vilket resulterade i 70% snabbare svarstider",
+              "Implementerade en CI/CD-pipeline som reducerade deploymenttiden med 80%",
+              "Initierade och ledde övergången till TypeScript, vilket minskade buggar i produktionen med 40%"
+          ]
+      },
+      {
+          "titel": "Fullstack-utvecklare",
+          "foretag": "StartupTech",
+          "period": "Jun 2016 - Feb 2019",
+          "beskrivning": [
+              "Var en nyckelspelare i utvecklingen av företagets flaggskeppsprodukt från grunden",
+              "Implementerade realtidsfunktionalitet med WebSockets vilket ökade användarengagemanget med 60%",
+              "Utvecklade och underhöll RESTful API:er för mobila och webbapplikationer",
+              "Arbetade nära UX-teamet för att implementera responsiva och tillgängliga gränssnitt"
+          ]
+      },
+      {
+          "titel": "Junior Utvecklare",
+          "foretag": "CodeCraft AB",
+          "period": "Sep 2014 - May 2016",
+          "beskrivning": [
+              "Utvecklade och underhöll företagets interna verktyg och dashboards",
+              "Assisterade i migreringen av legacy-system till moderna teknologistackar",
+              "Implementerade enhetstester vilket ökade kodtäckningen från 20% till 80%"
+          ]
+      }
+  ],
+  "utbildning": [
+      {
+          "examen": "Master i Datavetenskap",
+          "skola": "Kungliga Tekniska Högskolan",
+          "period": "2012 - 2014",
+          "beskrivning": "Specialisering inom distribuerade system och AI. Examensarbete: 'Skalbar maskininlärning i distribuerade system' som publicerades i en vetenskaplig tidskrift."
+      },
+      {
+          "examen": "Kandidatexamen i Systemvetenskap",
+          "skola": "Stockholms Universitet",
+          "period": "2009 - 2012",
+          "beskrivning": "Grundläggande studier i programmering, databaser, systemdesign och projektledning. Vann universitetets 'Innovativa IT-lösning' pris 2011."
+      },
+      {
+          "examen": "Utbytesstudier i Computer Science",
+          "skola": "Massachusetts Institute of Technology",
+          "period": "Hösten 2011",
+          "beskrivning": "Ett semesters utbytesstudier med fokus på avancerade algoritmer och datastrukturer."
+      },
+      {
+          "examen": "Tekniskt Gymnasium",
+          "skola": "Norra Real",
+          "period": "2006 - 2009",
+          "beskrivning": "IT-inriktning med fokus på programmering och webbutveckling. Vann skolans programmeringstävling två år i rad."
+      }
+  ],
+  "projekt": [
+      "Utvecklade en open-source AI-driven kodgranskningsassistent med över 50 000 användare",
+      "Skapade en populär React-komponentbibliotek med över 1 miljon nedladdningar på npm",
+      "Bidragsgivare till Kubernetes, med flera godkända pull requests",
+      "Talare på flera tech-konferenser, inklusive ReactConf och PyCon",
+      "Mentor i Women Who Code-nätverket, stöttar kvinnor som vill in i tech-branschen",
+      "Författare av en teknisk blogg med över 100 000 månatliga läsare"
+  ],
+  "certifieringar": [
+      "AWS Certified Solutions Architect",
+      "Google Cloud Professional Developer",
+      "Microsoft Certified: Azure Developer Associate",
+      "Certified Kubernetes Administrator (CKA)",
+      "Certified Scrum Master"
+  ]
+}

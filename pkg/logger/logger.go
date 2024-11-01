@@ -20,4 +20,4 @@ func New() *Logger {
 // Info loggar informationsmeddelanden
 func (l *Logger) Info(msg string) {
 	l.logger.Printf("INFO: %s", msg)
-}
+} 

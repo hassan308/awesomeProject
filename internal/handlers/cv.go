@@ -5,30 +5,15 @@ import (
 	"awesomeProject/internal/data"
 	"awesomeProject/internal/utils"
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
 )
 
-type CVRequest struct {
-	DisplayName    string `json:"displayName"`
-	Email          string `json:"email"`
-	Phone          string `json:"phone"`
-	Location       string `json:"location"`
-	Bio            string `json:"bio"`
-	Skills         string `json:"skills"`
-	Experience     string `json:"experience"`
-	Education      string `json:"education"`
-	Certifications string `json:"certifications"`
-	Jobbtitel      string `json:"Jobbtitel"`
-	JobDescription string `json:"jobDescription"`
-}
-
 func GenerateCV(c *gin.Context) {
-	var request CVRequest
+	var request data.CVRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Printf("Fel vid JSON-bindning: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ogiltig förfrågan: " + err.Error()})
@@ -44,10 +29,10 @@ func GenerateCV(c *gin.Context) {
 		Education:      request.Education,
 		Skills:         request.Skills,
 		Certifications: request.Certifications,
-		Bio:            request.Bio,
-		Email:          request.Email,
-		Phone:          request.Phone,
-		Location:       request.Location,
+		Bio:           request.Bio,
+		Email:         request.Email,
+		Phone:         request.Phone,
+		Location:      request.Location,
 	}
 
 	// Generera AI-innehåll
@@ -58,121 +43,67 @@ func GenerateCV(c *gin.Context) {
 		return
 	}
 
-	// Säkerställ att personlig info finns och har rätt struktur
-	personligInfo := aiResponse["personlig_info"].(map[string]interface{})
-	kontakt := personligInfo["kontakt"].(map[string]interface{})
+	// Extrahera personlig information från AI-svaret
+	personligInfoMap, _ := aiResponse["personlig_info"].(map[string]interface{})
+	kontaktMap, _ := personligInfoMap["kontakt"].(map[string]interface{})
 
-	// Uppdatera kontaktinformation
-	kontakt["email"] = request.Email
-	kontakt["telefon"] = request.Phone
-	kontakt["adress"] = request.Location
-	kontakt["linkedin"] = "/in/" + strings.ToLower(strings.Replace(request.DisplayName, " ", "-", -1))
-	kontakt["github"] = "/github"
-	kontakt["portfolio"] = "www.portfolio.se"
-
-	// Hantera arbetslivserfarenhet
-	var arbetslivserfarenhet []map[string]interface{}
-	if aiExp, ok := aiResponse["arbetslivserfarenhet"].([]interface{}); ok && len(aiExp) > 0 {
-		for _, exp := range aiExp {
-			if expMap, ok := exp.(map[string]interface{}); ok {
-				arbetslivserfarenhet = append(arbetslivserfarenhet, map[string]interface{}{
-					"Titel":       expMap["titel"],
-					"Foretag":     expMap["foretag"],
-					"Period":      expMap["period"],
-					"Beskrivning": expMap["beskrivning"],
-				})
-			}
-		}
-	} else {
-		// Om ingen erfarenhet finns, lägg till en default-post
-		arbetslivserfarenhet = []map[string]interface{}{
-			{
-				"Titel":       "Legitimerad Sjuksköterska",
-				"Foretag":     "Söker nya möjligheter",
-				"Period":      "Tillgänglig omgående",
-				"Beskrivning": []string{"Redo för nya utmaningar inom kommunal vård"},
+	templateData := data.TemplateData{
+		PersonligInfo: data.PersonligInfo{
+			Namn:    getStringValueFromMap(personligInfoMap, "namn", request.DisplayName),
+			Titel:   getStringValueFromMap(personligInfoMap, "titel", request.Jobbtitel),
+			Bild:    getStringValueFromMap(personligInfoMap, "bild", "https://via.placeholder.com/150"),
+			Kontakt: []data.KontaktItem{
+				{
+					Typ:   "email",
+					Varde: getStringValueFromMap(kontaktMap, "email", request.Email),
+					Ikon:  "📧",
+				},
+				{
+					Typ:   "telefon",
+					Varde: getStringValueFromMap(kontaktMap, "telefon", request.Phone),
+					Ikon:  "📱",
+				},
+				{
+					Typ:   "adress",
+					Varde: getStringValueFromMap(kontaktMap, "adress", request.Location),
+					Ikon:  "📍",
+				},
+				{
+					Typ:   "linkedin",
+					Varde: getStringValueFromMap(kontaktMap, "linkedin", "LinkedIn"),
+					Ikon:  "🔗",
+				},
+				{
+					Typ:   "github",
+					Varde: getStringValueFromMap(kontaktMap, "github", "GitHub"),
+					Ikon:  "💻",
+				},
+				{
+					Typ:   "portfolio",
+					Varde: getStringValueFromMap(kontaktMap, "portfolio", "Portfolio"),
+					Ikon:  "🌐",
+				},
 			},
-		}
-	}
-
-	// Hantera utbildning
-	var utbildning []map[string]interface{}
-	if aiEdu, ok := aiResponse["utbildning"].([]interface{}); ok && len(aiEdu) > 0 {
-		for _, edu := range aiEdu {
-			if eduMap, ok := edu.(map[string]interface{}); ok {
-				utbildning = append(utbildning, map[string]interface{}{
-					"Examen":      eduMap["examen"],
-					"Skola":       eduMap["skola"],
-					"Period":      eduMap["period"],
-					"Beskrivning": eduMap["beskrivning"],
-				})
-			}
-		}
-	} else {
-		// Om ingen utbildning finns, lägg till en default-post
-		utbildning = []map[string]interface{}{
-			{
-				"Examen":      "Legitimerad Sjuksköterska",
-				"Skola":       "Vårdutbildning",
-				"Period":      "Fullgjord utbildning",
-				"Beskrivning": "Legitimerad sjuksköterska med inriktning mot kommunal vård",
-			},
-		}
-	}
-
-	// Hantera språk
-	var sprak []map[string]interface{}
-	if aiSprak, ok := aiResponse["sprak"].([]interface{}); ok && len(aiSprak) > 0 {
-		for _, s := range aiSprak {
-			if sprakMap, ok := s.(map[string]interface{}); ok {
-				sprak = append(sprak, map[string]interface{}{
-					"Sprak": sprakMap["sprak"],
-					"Niva":  sprakMap["niva"],
-				})
-			}
-		}
-	} else {
-		// Default språkkunskaper
-		sprak = []map[string]interface{}{
-			{
-				"Sprak": "Svenska",
-				"Niva":  "Modersmål",
-			},
-			{
-				"Sprak": "Engelska",
-				"Niva":  "Grundläggande",
-			},
-		}
-	}
-
-	// Konvertera svaret till rätt format för templaten
-	templateData := map[string]interface{}{
-		"PersonligInfo": map[string]interface{}{
-			"Namn":    personligInfo["namn"],
-			"Titel":   personligInfo["titel"],
-			"Bild":    "https://via.placeholder.com/150",
-			"Kontakt": kontakt,
 		},
-		"Fardigheter":          aiResponse["fardigheter"],
-		"Sprak":                sprak,
-		"Profil":               aiResponse["profil"],
-		"Arbetslivserfarenhet": arbetslivserfarenhet,
-		"Utbildning":           utbildning,
-		"Projekt": []string{
-			"Kommunal vård och omsorg",
-			"Patientvård och dokumentation",
-		},
-		"Certifieringar": []string{
-			"Legitimerad Sjuksköterska",
-		},
+		Fardigheter:         convertToStringSlice(aiResponse["fardigheter"]),
+		Sprak:               parseAISprak(aiResponse["sprak"]),
+		Profil:              getStringValue(aiResponse["profil"]),
+		Arbetslivserfarenhet: parseAIExperience(aiResponse["arbetslivserfarenhet"]),
+		Utbildning:          parseAIEducation(aiResponse["utbildning"]),
+		Projekt:             convertToStringSlice(aiResponse["projekt"]),
+		Certifieringar:      convertToStringSlice(aiResponse["certifieringar"]),
 	}
 
-	// Logga data som skickas till template
-	prettyJSON, _ := json.MarshalIndent(templateData, "", "  ")
-	log.Printf("Data som skickas till template:\n%s\n", string(prettyJSON))
+	// Logga data för felsökning
+	log.Printf("Template data som ska renderas:\n%+v", templateData)
 
-	// Rendera template
-	tmpl, err := template.ParseFiles("internal/templates/cv_template.html")
+	// Rendera template med funcs map för eq helper
+	tmpl, err := template.New("cv_template.html").Funcs(template.FuncMap{
+		"eq": func(a, b interface{}) bool {
+			return fmt.Sprintf("%v", a) == fmt.Sprintf("%v", b)
+		},
+	}).ParseFiles("internal/templates/cv_template.html")
+
 	if err != nil {
 		log.Printf("Fel vid parsing av template: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kunde inte ladda CV-mall"})
@@ -196,7 +127,7 @@ func convertToStringSlice(input interface{}) []string {
 	if input == nil {
 		return []string{}
 	}
-
+	
 	slice, ok := input.([]interface{})
 	if !ok {
 		return []string{}
@@ -219,16 +150,33 @@ func parseAIExperience(input interface{}) []data.Arbetslivserfarenhet {
 		return []data.Arbetslivserfarenhet{}
 	}
 
-	result := make([]data.Arbetslivserfarenhet, len(experiences))
-	for i, exp := range experiences {
-		expMap := exp.(map[string]interface{})
-		result[i] = data.Arbetslivserfarenhet{
-			Titel:       expMap["titel"].(string),
-			Foretag:     expMap["foretag"].(string),
-			Period:      expMap["period"].(string),
-			Beskrivning: convertToStringSlice(expMap["beskrivning"]),
+	var result []data.Arbetslivserfarenhet
+	for _, exp := range experiences {
+		expMap, ok := exp.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		erfarenhet := data.Arbetslivserfarenhet{
+			Titel:   getStringValueFromMap(expMap, "titel", ""),
+			Foretag: getStringValueFromMap(expMap, "foretag", ""),
+			Period:  getStringValueFromMap(expMap, "period", ""),
+		}
+
+		// Hantera beskrivning som kan vara antingen sträng eller array
+		beskrivning := expMap["beskrivning"]
+		switch v := beskrivning.(type) {
+		case string:
+			erfarenhet.Beskrivning = []string{v}
+		case []interface{}:
+			erfarenhet.Beskrivning = convertToStringSlice(v)
+		}
+
+		if erfarenhet.Titel != "" {
+			result = append(result, erfarenhet)
 		}
 	}
+
 	return result
 }
 
@@ -237,20 +185,82 @@ func parseAIEducation(input interface{}) []data.Utbildning {
 		return []data.Utbildning{}
 	}
 
-	education, ok := input.([]interface{})
+	eduSlice, ok := input.([]interface{})
 	if !ok {
 		return []data.Utbildning{}
 	}
 
-	result := make([]data.Utbildning, len(education))
-	for i, edu := range education {
-		eduMap := edu.(map[string]interface{})
-		result[i] = data.Utbildning{
-			Examen:      eduMap["examen"].(string),
-			Skola:       eduMap["skola"].(string),
-			Period:      eduMap["period"].(string),
-			Beskrivning: eduMap["beskrivning"].(string),
+	var utbildningar []data.Utbildning
+	for _, edu := range eduSlice {
+		eduMap, ok := edu.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Sätt default-värden om data saknas
+		utbildning := data.Utbildning{
+			Examen:      getStringValueFromMap(eduMap, "examen", "Examen saknas"),
+			Skola:       getStringValueFromMap(eduMap, "universitet", "Universitet saknas"),
+			Period:      getStringValueFromMap(eduMap, "period", "Period saknas"),
+			Beskrivning: []string{getStringValueFromMap(eduMap, "beskrivning", "")},
+		}
+
+		// Lägg endast till om vi har meningsfull data
+		if utbildning.Examen != "Examen saknas" || utbildning.Skola != "Universitet saknas" {
+			utbildningar = append(utbildningar, utbildning)
+		}
+	}
+
+	return utbildningar
+}
+
+func parseAISprak(input interface{}) []data.Sprak {
+	if input == nil {
+		return []data.Sprak{}
+	}
+
+	sprakList, ok := input.([]interface{})
+	if !ok {
+		return []data.Sprak{}
+	}
+
+	var result []data.Sprak
+	for _, sprak := range sprakList {
+		sprakMap, ok := sprak.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		
+		sprakItem := data.Sprak{
+			Sprak: getStringValueFromMap(sprakMap, "sprak", ""),
+			Niva:  getStringValueFromMap(sprakMap, "niva", ""),
+		}
+		
+		if sprakItem.Sprak != "" && sprakItem.Niva != "" {
+			result = append(result, sprakItem)
 		}
 	}
 	return result
 }
+
+// Ny hjälpfunktion för att hantera null-värden
+func getStringValue(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	if str, ok := v.(string); ok {
+		return str
+	}
+	return ""
+}
+
+// Lägg till en ny funktion för att hämta strängvärden från map med default-värde
+func getStringValueFromMap(m map[string]interface{}, key, defaultValue string) string {
+	if val, exists := m[key]; exists && val != nil {
+		if strVal, ok := val.(string); ok {
+			return strVal
+		}
+	}
+	return defaultValue
+}
+

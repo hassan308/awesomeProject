@@ -13,6 +13,15 @@ import (
 	"google.golang.org/api/option"
 )
 
+func getAPIKey() string {
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		key = "AIzaSyAuEqi2qBJ-_4QjtdDDgU0Vwd0G05zWZVs"
+		log.Println("Varning: Använder default API-nyckel. Sätt GEMINI_API_KEY miljövariabel i produktion.")
+	}
+	return key
+}
+
 type CVPrompt struct {
 	Name           string
 	JobTitle       string
@@ -27,9 +36,30 @@ type CVPrompt struct {
 	Location       string
 }
 
+func addEmojisToResponse(result map[string]interface{}) map[string]interface{} {
+	if personligInfo, ok := result["personlig_info"].(map[string]interface{}); ok {
+		if kontakt, ok := personligInfo["kontakt"].(map[string]interface{}); ok {
+			personligInfo["kontakt"] = kontakt
+		}
+		result["personlig_info"] = personligInfo
+	}
+	return result
+}
+
+func cleanHTML(text string) string {
+	// Ta bort HTML-taggar och konvertera till ren text
+	re := regexp.MustCompile("<[^>]*>")
+	text = re.ReplaceAllString(text, "")
+	// Ersätt flera mellanslag/radbrytningar med ett mellanslag
+	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
+	return strings.TrimSpace(text)
+}
+
 func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
-	// Logga inkommande data
-	log.Printf("\nData som skickas till AI:\n"+
+	// Rensa HTML från jobbeskrivningen
+	cleanedJobDescription := cleanHTML(prompt.JobDescription)
+
+	log.Printf("Data som skickas till AI:\n"+
 		"Namn: %s\n"+
 		"Email: %s\n"+
 		"Telefon: %s\n"+
@@ -51,39 +81,84 @@ func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
 		prompt.Education,
 		prompt.Certifications,
 		prompt.JobTitle,
-		prompt.JobDescription)
+		cleanedJobDescription)
 
 	ctx := context.Background()
 
-	// Läs API-nyckel från .env
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("GEMINI_API_KEY saknas i miljövariabler")
-	}
-
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	client, err := genai.NewClient(ctx, option.WithAPIKey(getAPIKey()))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer client.Close()
 
-	// Läs modellkonfiguration från .env
-	model := client.GenerativeModel(os.Getenv("GEMINI_MODEL"))
-	
-	// Konvertera till rätt typer
-	temperature := float32(0.1)    // float32
-	topK := int32(40)             // int32
-	topP := float32(0.95)         // float32
-	maxTokens := int32(8192)      // int32
-
-	model.SetTemperature(temperature)
-	model.SetTopK(topK)
-	model.SetTopP(topP)
-	model.SetMaxOutputTokens(maxTokens)
+	model := client.GenerativeModel("gemini-1.5-flash-8b")
+	model.SetTemperature(0.1)
+	model.SetTopK(40)
+	model.SetTopP(0.95)
+	model.SetMaxOutputTokens(8192)
 
 	session := model.StartChat()
 
-	promptText := fmt.Sprintf(`Skapa ett detaljerat och professionellt CV  fyll på informationen på kreativ sätt på följande information:
+	promptText := buildPrompt(prompt)
+
+	log.Printf("\nPrompt som skickas till AI:\n%s\n", promptText)
+
+	resp, err := session.SendMessage(ctx, genai.Text(promptText))
+	if err != nil {
+		log.Printf("Fel vid generering av innehåll: %v", err)
+		return nil, err
+	}
+
+	if len(resp.Candidates) == 0 {
+		return nil, fmt.Errorf("inget svar från AI")
+	}
+
+	var aiResponse string
+	for _, part := range resp.Candidates[0].Content.Parts {
+		aiResponse += fmt.Sprintf("%v", part)
+	}
+
+	// Förbättrad JSON-extrahering
+	var cleanedJSON string
+	if jsonStart := strings.Index(aiResponse, "{"); jsonStart != -1 {
+		if jsonEnd := strings.Index(aiResponse[jsonStart:], "\n```"); jsonEnd != -1 {
+			cleanedJSON = aiResponse[jsonStart:jsonStart+jsonEnd]
+		} else if jsonEnd := strings.LastIndex(aiResponse[jsonStart:], "}"); jsonEnd != -1 {
+			cleanedJSON = aiResponse[jsonStart : jsonStart+jsonEnd+1]
+		} else {
+			return nil, fmt.Errorf("kunde inte hitta slutet på JSON-objektet")
+		}
+	} else {
+		return nil, fmt.Errorf("kunde inte hitta början på JSON-objektet")
+	}
+
+	// Rensa bort eventuella markdown-markeringar och extra text
+	cleanedJSON = strings.TrimSpace(cleanedJSON)
+	cleanedJSON = strings.TrimPrefix(cleanedJSON, "```json")
+	cleanedJSON = strings.TrimSuffix(cleanedJSON, "```")
+
+	// Logga den rensade JSON:en för felsökning
+	log.Printf("Rensat JSON-svar:\n%s", cleanedJSON)
+
+	var result map[string]interface{}
+	decoder := json.NewDecoder(strings.NewReader(cleanedJSON))
+	decoder.UseNumber() // För bättre hantering av numeriska värden
+	
+	if err := decoder.Decode(&result); err != nil {
+		return nil, fmt.Errorf("fel vid parsing av AI-svar: %v\nJSON: %s", err, cleanedJSON)
+	}
+
+	// Validera nyckelstrukturen
+	if _, ok := result["personlig_info"].(map[string]interface{}); !ok {
+		return nil, fmt.Errorf("ogiltig JSON-struktur: saknar personlig_info")
+	}
+
+	return result, nil
+}
+
+// Uppdatera prompten för att få ett mer strukturerat svar
+func buildPrompt(prompt CVPrompt) string {
+	return fmt.Sprintf(`Skapa ett detaljerat och personligt CV. Fyll på informationen på kreativ sätt och hitta på så att den låter realikstisk på alla fält använd dig av  på följande information:
 Mitt Namn: %s
 Jobbtitel som jag söker till: %s
 Beskrivning av önskad position: %s
@@ -92,13 +167,13 @@ mina utbildningar: %s
 mina skills: %s
 mina certifactions: %s
 övriga informationen om mig: %s
-
-skicka tillbaka endast med JSON-format med följande struktur och förklara inte koden eller med text. Skicka tillbaka endast med json format. börja inte med ordent med json heller
+skicka tillbaka endast med JSON-format med följande struktur och förklara inte koden eller med text.
+Skicka tillbaka endast med json format. börja inte med ordent med json heller
 gå rakt på saken
 {
     "personlig_info": {
-        "namn": "Fullständigt Namn",
-        "titel": "Professionell Titel",
+        "namn": "%s",
+        "titel": "%s",
         "bild": "URL till profilbild",
         "kontakt": {
             "email": "%s",
@@ -145,50 +220,19 @@ gå rakt på saken
         "Certifiering2"
     ]
 }`,
-		prompt.Name, prompt.JobTitle, prompt.JobDescription, prompt.Experience,
-		prompt.Education, prompt.Skills, prompt.Certifications, prompt.Bio,
-		prompt.Email, prompt.Phone, prompt.Location)
-
-	// Logga prompten som skickas till AI
-	log.Printf("\nPrompt som skickas till AI:\n%s\n", promptText)
-
-	resp, err := session.SendMessage(ctx, genai.Text(promptText))
-	if err != nil {
-		log.Printf("Fel vid generering av innehåll: %v", err)
-		return nil, err
-	}
-
-	if len(resp.Candidates) == 0 {
-		return nil, fmt.Errorf("inget svar från AI")
-	}
-
-	var aiResponse string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		aiResponse += fmt.Sprintf("%v", part)
-	}
-
-	cleanedResponse := cleanJSONResponse(aiResponse)
-	log.Printf("\nRensat AI-svar:\n%s\n", cleanedResponse)
-
-	var result map[string]interface{}
-	if err := json.Unmarshal([]byte(cleanedResponse), &result); err != nil {
-		log.Printf("JSON parsing error. Original svar: %s\nRensat svar: %s", aiResponse, cleanedResponse)
-		return nil, fmt.Errorf("fel vid parsing av AI-svar: %v", err)
-	}
-
-	return result, nil
-}
-
-func cleanJSONResponse(response string) string {
-	response = strings.TrimSpace(response)
-	response = regexp.MustCompile("```json\n|```\n|```").ReplaceAllString(response, "")
-
-	startBrace := strings.Index(response, "{")
-	endBrace := strings.LastIndex(response, "}")
-
-	if startBrace >= 0 && endBrace >= 0 && endBrace > startBrace {
-		response = response[startBrace : endBrace+1]
-	}
-
-	return strings.TrimSpace(response)
+        // Första set av parametrar för informationen
+        prompt.Name,
+        prompt.JobTitle,
+        prompt.JobDescription,
+        prompt.Experience,
+        prompt.Education,
+        prompt.Skills,
+        prompt.Certifications,
+        prompt.Bio,
+        // Andra set av parametrar för JSON-strukturen
+        prompt.Name,
+        prompt.JobTitle,
+        prompt.Email,
+        prompt.Phone,
+        prompt.Location)
 }
