@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 )
-
-const GEMINI_API_KEY = "AIzaSyAFl2ldHhMnRRhSqud71S8lLe9QKes1KtA"
 
 type CVPrompt struct {
 	Name           string
@@ -56,17 +55,31 @@ func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
 
 	ctx := context.Background()
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(GEMINI_API_KEY))
+	// Läs API-nyckel från .env
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("GEMINI_API_KEY saknas i miljövariabler")
+	}
+
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-1.5-flash-8b")
-	model.SetTemperature(0.1)
-	model.SetTopK(40)
-	model.SetTopP(0.95)
-	model.SetMaxOutputTokens(8192)
+	// Läs modellkonfiguration från .env
+	model := client.GenerativeModel(os.Getenv("GEMINI_MODEL"))
+	
+	// Konvertera till rätt typer
+	temperature := float32(0.1)    // float32
+	topK := int32(40)             // int32
+	topP := float32(0.95)         // float32
+	maxTokens := int32(8192)      // int32
+
+	model.SetTemperature(temperature)
+	model.SetTopK(topK)
+	model.SetTopP(topP)
+	model.SetMaxOutputTokens(maxTokens)
 
 	session := model.StartChat()
 
