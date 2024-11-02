@@ -45,7 +45,7 @@ func main() {
 	// Lägg till Prometheus middleware
 	router.Use(prometheusMiddleware())
 
-	// Tidigare CORS-konfiguration...
+	// CORS-konfiguration
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -58,11 +58,10 @@ func main() {
 	router.GET("/health", handlers.HealthCheck)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// Tidigare konfiguration...
+	// Lägg till stöd för templates
 	router.LoadHTMLGlob("internal/templates/*")
-	router.Static("/static", "./static")
 
-	// Tidigare API endpoints...
+	// API endpoints
 	router.POST("/generate_cv", handlers.GenerateCV)
 	router.POST("/search", handlers.SearchJobs)
 

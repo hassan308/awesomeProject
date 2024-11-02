@@ -30,7 +30,7 @@ func getConfig() (string, string, int, int) {
 		}
 	}
 
-	defaultMaxJobs := 50 // Default värde
+	defaultMaxJobs := 300 // Default värde
 	if val := os.Getenv("PLATSBANKEN_DEFAULT_MAX_JOBS"); val != "" {
 		if n, err := strconv.Atoi(val); err == nil {
 			defaultMaxJobs = n

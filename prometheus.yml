@@ -1,0 +1,19 @@
+scrape_configs:
+  - job_name: 'go-cv-app'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['localhost:8080']
+    scrape_interval: 15s
+
+
+#sudo netstat -tulpn | grep 9090
+#sudo kill -9 <pid>
+
+#för att köra prometheus server:
+#hassoback@DESKTOP-V6PUFGL:/mnt/c/Users/hassoback/GolandProjects/prometheus-2.43.0.linux-amd64$ ./prometheus --config.file=prometheus.yml --enable-feature=remote-write-receiver
+
+#för att testa k6:
+#K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write ./k6 run -o experimental-prometheus-rw test.js
+
+#för att köra grafana:
+
