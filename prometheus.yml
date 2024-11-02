@@ -17,3 +17,5 @@ scrape_configs:
 
 #för att köra grafana:
 
+#sudo docker build -t cv-app .
+#sudo docker-compose up
