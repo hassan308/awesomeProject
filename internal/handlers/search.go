@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"time"
 	"os"
 	"strconv"
 	"github.com/gin-gonic/gin"
+	"sync"
 )
 
 // Använd miljövariabler istället för konstanter
@@ -30,7 +32,7 @@ func getConfig() (string, string, int, int) {
 		}
 	}
 
-	defaultMaxJobs := 300 // Default värde
+	defaultMaxJobs := 500 // Ändrat från 1000 till 500
 	if val := os.Getenv("PLATSBANKEN_DEFAULT_MAX_JOBS"); val != "" {
 		if n, err := strconv.Atoi(val); err == nil {
 			defaultMaxJobs = n
@@ -63,18 +65,58 @@ func SearchJobs(c *gin.Context) {
 		request.MaxJobs = defaultMaxJobs
 	}
 
+	log.Printf("Startar jobbsökning - sökterm: %s, maxJobs: %d", 
+		request.SearchTerm, request.MaxJobs)
+
 	jobs, err := fetchAllJobs(apiURL, request.SearchTerm, request.MaxJobs, maxRecords)
 	if err != nil {
+		log.Printf("Fel vid jobbsökning - sökterm: %s, error: %s", 
+			request.SearchTerm, err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	jobDetails := make([]map[string]interface{}, 0)
+	log.Printf("Hittade jobb - antal: %d, sökterm: %s", 
+		len(jobs), request.SearchTerm)
+
+	// Skapa en kanal för jobbdetaljer
+	jobDetailsChan := make(chan map[string]interface{}, len(jobs))
+	// Skapa en WaitGroup för att vänta på alla goroutines
+	var wg sync.WaitGroup
+
+	// Begränsa antalet samtidiga requests med en semaphore
+	semaphore := make(chan struct{}, 200) // Ändrat från 50 till 200 samtidiga requests
+
+	// Starta goroutines för varje jobb
 	for _, job := range jobs {
-		if details, err := fetchJobDetails(jobDetailURL, job["id"].(string)); err == nil && details != nil {
-			jobDetails = append(jobDetails, details)
-		}
+		wg.Add(1)
+		go func(jobID string) {
+			defer wg.Done()
+			
+			// Använd semaphore för att begränsa samtidiga requests
+			semaphore <- struct{}{} // Acquire
+			defer func() { <-semaphore }() // Release
+
+			if details, err := fetchJobDetails(jobDetailURL, jobID); err == nil && details != nil {
+				jobDetailsChan <- details
+			}
+		}(job["id"].(string))
 	}
+
+	// Starta en goroutine för att stänga kanalen när alla jobb är klara
+	go func() {
+		wg.Wait()
+		close(jobDetailsChan)
+	}()
+
+	// Samla alla jobbdetaljer från kanalen
+	var jobDetails []map[string]interface{}
+	for detail := range jobDetailsChan {
+		jobDetails = append(jobDetails, detail)
+	}
+
+	log.Printf("Hämtade jobbdetaljer klart - antal_med_detaljer: %d, sökterm: %s", 
+		len(jobDetails), request.SearchTerm)
 
 	c.JSON(http.StatusOK, jobDetails)
 }
@@ -87,6 +129,8 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
+
+	log.Printf("Börjar hämta jobb - målantal: %d, maxRecords per request: %d", maxJobs, maxRecords)
 
 	for {
 		currentMaxRecords := maxRecords
@@ -120,12 +164,16 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		}
 
 		req.Header.Set("Content-Type", "application/json")
+		log.Printf("Gör API-anrop - startIndex: %d, maxRecords: %d", startIndex, currentMaxRecords)
+		
 		resp, err := client.Do(req)
 		if err != nil {
+			log.Printf("Fel vid API-anrop: %v", err)
 			return nil, err
 		}
 
 		if resp.StatusCode != http.StatusOK {
+			log.Printf("Oväntat statuskod från API: %d", resp.StatusCode)
 			resp.Body.Close()
 			break
 		}
@@ -139,9 +187,12 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 
 		ads, ok := result["ads"].([]interface{})
 		if !ok || len(ads) == 0 {
+			log.Printf("Inga fler annonser hittades, avbryter. Totalt antal: %d", len(allAds))
 			break
 		}
 
+		log.Printf("Hämtade %d annonser i denna batch", len(ads))
+		
 		for _, ad := range ads {
 			if adMap, ok := ad.(map[string]interface{}); ok {
 				allAds = append(allAds, adMap)
@@ -149,19 +200,26 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		}
 
 		startIndex += len(ads)
+		log.Printf("Totalt antal hämtade annonser: %d", len(allAds))
 
 		if maxJobs > 0 && len(allAds) >= maxJobs {
+			log.Printf("Nått målantal annonser (%d), avbryter", maxJobs)
 			allAds = allAds[:maxJobs]
 			break
 		}
 
+		// Om vi fick färre annonser än begärt finns inga fler att hämta
 		if len(ads) < currentMaxRecords {
+			log.Printf("Färre annonser än begärt returnerades (%d < %d), inga fler finns", 
+				len(ads), currentMaxRecords)
 			break
 		}
 
-		time.Sleep(80 * time.Millisecond)
+		// Lägg till en kort paus mellan anropen för att inte överbelasta API:et
+		time.Sleep(100 * time.Millisecond)
 	}
 
+	log.Printf("Färdig med att hämta annonser. Totalt antal: %d", len(allAds))
 	return allAds, nil
 }
 

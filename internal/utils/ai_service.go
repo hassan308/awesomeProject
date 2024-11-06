@@ -61,7 +61,6 @@ func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
 
 	log.Printf("Data som skickas till AI:\n"+
 		"Namn: %s\n"+
-		"Email: %s\n"+
 		"Telefon: %s\n"+
 		"Plats: %s\n"+
 		"Bio: %s\n"+
@@ -72,7 +71,6 @@ func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
 		"Jobbtitel: %s\n"+
 		"Jobbeskrivning: %s\n",
 		prompt.Name,
-		prompt.Email,
 		prompt.Phone,
 		prompt.Location,
 		prompt.Bio,
@@ -159,7 +157,7 @@ func GenerateAIContent(prompt CVPrompt) (map[string]interface{}, error) {
 // Uppdatera prompten för att få ett mer strukturerat svar
 func buildPrompt(prompt CVPrompt) string {
 	return fmt.Sprintf(`Skapa ett detaljerat och personligt CV. Fyll på informationen på kreativ sätt och hitta på så att den låter realikstisk på alla fält använd dig av  på följande information:
-Mitt Namn: %s
+Mitt Namn: "exemple"
 Jobbtitel som jag söker till: %s
 Beskrivning av önskad position: %s
 mina erfarenhet: %s
@@ -172,11 +170,11 @@ Skicka tillbaka endast med json format. börja inte med ordent med json heller
 gå rakt på saken
 {
     "personlig_info": {
-        "namn": "%s",
+        "namn": "exemple",
         "titel": "%s",
         "bild": "URL till profilbild",
         "kontakt": {
-            "email": "%s",
+            "email": "exempel@email.se",
             "telefon": "%s",
             "adress": "%s",
             "linkedin": "/in/dinlinkedin",
@@ -221,7 +219,6 @@ gå rakt på saken
     ]
 }`,
         // Första set av parametrar för informationen
-        prompt.Name,
         prompt.JobTitle,
         prompt.JobDescription,
         prompt.Experience,
@@ -230,9 +227,7 @@ gå rakt på saken
         prompt.Certifications,
         prompt.Bio,
         // Andra set av parametrar för JSON-strukturen
-        prompt.Name,
         prompt.JobTitle,
-        prompt.Email,
         prompt.Phone,
         prompt.Location)
 }
