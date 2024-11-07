@@ -65,19 +65,17 @@ func SearchJobs(c *gin.Context) {
 		request.MaxJobs = defaultMaxJobs
 	}
 
-	log.Printf("Startar jobbsökning - sökterm: %s, maxJobs: %d", 
-		request.SearchTerm, request.MaxJobs)
+	log.Printf("=== Ny sökning påbörjad ===")
+	log.Printf("Sökparametrar: term='%s', maxJobs=%d", request.SearchTerm, request.MaxJobs)
 
 	jobs, err := fetchAllJobs(apiURL, request.SearchTerm, request.MaxJobs, maxRecords)
 	if err != nil {
-		log.Printf("Fel vid jobbsökning - sökterm: %s, error: %s", 
-			request.SearchTerm, err.Error())
+		log.Printf("❌ FEL vid jobbsökning: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("Hittade jobb - antal: %d, sökterm: %s", 
-		len(jobs), request.SearchTerm)
+	log.Printf("✅ Hittade totalt %d jobb för söktermen '%s'", len(jobs), request.SearchTerm)
 
 	// Skapa en kanal för jobbdetaljer
 	jobDetailsChan := make(chan map[string]interface{}, len(jobs))
@@ -97,8 +95,15 @@ func SearchJobs(c *gin.Context) {
 			semaphore <- struct{}{} // Acquire
 			defer func() { <-semaphore }() // Release
 
+			log.Printf("🔍 Hämtar detaljer för jobb ID: %s", jobID)
 			if details, err := fetchJobDetails(jobDetailURL, jobID); err == nil && details != nil {
+				log.Printf("✅ Lyckades hämta detaljer för jobb ID: %s", jobID)
+				if title, ok := details["headline"].(string); ok {
+					log.Printf("📋 Jobbtitel: %s", title)
+				}
 				jobDetailsChan <- details
+			} else if err != nil {
+				log.Printf("❌ Fel vid hämtning av jobbdetaljer för ID %s: %v", jobID, err)
 			}
 		}(job["id"].(string))
 	}
@@ -130,7 +135,10 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		Timeout: 30 * time.Second,
 	}
 
-	log.Printf("Börjar hämta jobb - målantal: %d, maxRecords per request: %d", maxJobs, maxRecords)
+	log.Printf("=== Startar jobbsökning ===")
+	log.Printf("🔍 Sökterm: %s", searchTerm)
+	log.Printf("📊 Max antal jobb att hämta: %d", maxJobs)
+	log.Printf("📊 Max antal per request: %d", maxRecords)
 
 	for {
 		currentMaxRecords := maxRecords
@@ -173,7 +181,9 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			log.Printf("Oväntat statuskod från API: %d", resp.StatusCode)
+			log.Printf("❌ API svarade med status: %d", resp.StatusCode)
+			body, _ := io.ReadAll(resp.Body)
+			log.Printf("📝 API svar: %s", string(body))
 			resp.Body.Close()
 			break
 		}
@@ -191,11 +201,20 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 			break
 		}
 
-		log.Printf("Hämtade %d annonser i denna batch", len(ads))
+		log.Printf("✅ Hämtade %d nya jobb i denna batch", len(ads))
+		log.Printf("📊 Totalt antal hämtade jobb: %d", len(allAds))
 		
-		for _, ad := range ads {
+		for i, ad := range ads {
 			if adMap, ok := ad.(map[string]interface{}); ok {
 				allAds = append(allAds, adMap)
+				
+				// Logga detaljerad information för de första 2 jobben
+				if i < 2 {
+					prettyJSON, err := json.MarshalIndent(adMap, "", "    ")
+					if err == nil {
+						log.Printf("🔍 Detaljerad information för jobb %d:\n%s", i+1, string(prettyJSON))
+					}
+				}
 			}
 		}
 
@@ -219,11 +238,14 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	log.Printf("Färdig med att hämta annonser. Totalt antal: %d", len(allAds))
+	log.Printf("=== Jobbsökning avslutad ===")
+	log.Printf("📊 Slutligt antal hämtade jobb: %d", len(allAds))
 	return allAds, nil
 }
 
 func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error) {
+	log.Printf("🔍 Hämtar detaljer för jobb %s", jobID)
+
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -235,6 +257,7 @@ func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("❌ Kunde inte hämta detaljer för jobb %s, status: %d", jobID, resp.StatusCode)
 		return nil, nil
 	}
 
@@ -248,5 +271,14 @@ func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error)
 		return nil, err
 	}
 
+	// Logga detaljerad information för de första 2 jobben
+	if jobID == details["id"] && (len(details) > 0) {
+		prettyJSON, err := json.MarshalIndent(details, "", "    ")
+		if err == nil {
+			log.Printf("📋 Detaljerad jobbinformation för %s:\n%s", jobID, string(prettyJSON))
+		}
+	}
+
+	log.Printf("✅ Hämtade detaljer för jobb %s", jobID)
 	return details, nil
 } 
