@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"os"
+	"time"
 )
 
 // Definiera metrics
@@ -47,11 +48,12 @@ func main() {
 
 	// CORS-konfiguration
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://smidra.com", "https://www.smidra.com"},
+		AllowOrigins:     []string{"http://localhost:3000", "https://smidra.com", "https://www.smidra.com", "http://smidra.com", "http://www.smidra.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
+			AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+			ExposeHeaders:    []string{"Content-Length"},
+			AllowCredentials: true,
+			MaxAge: 12 * time.Hour,
 	}))
 
 	// Health och metrics endpoints
