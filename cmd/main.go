@@ -47,14 +47,28 @@ func main() {
 	router.Use(prometheusMiddleware())
 
 	// CORS-konfiguration
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://smidra.com", "https://www.smidra.com", "http://smidra.com", "http://www.smidra.com"},
+	config := cors.Config{
+		AllowOrigins: []string{
+			"https://smidra.com",
+			"https://www.smidra.com",
+			// Lägg endast till de domäner du faktiskt behöver
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-			AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-			ExposeHeaders:    []string{"Content-Length"},
-			AllowCredentials: true,
-			MaxAge: 12 * time.Hour,
-	}))
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+
+	// Lägg till debug middleware för CORS
+	router.Use(func(c *gin.Context) {
+		log.Printf("Inkommande förfrågan från Origin: %s", c.GetHeader("Origin"))
+		log.Printf("Request Method: %s", c.Request.Method)
+		log.Printf("Request Headers: %v", c.Request.Header)
+		c.Next()
+	})
+
+	router.Use(cors.New(config))
 
 	// Health och metrics endpoints
 	router.GET("/health", handlers.HealthCheck)
