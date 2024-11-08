@@ -13,30 +13,42 @@ import (
 )
 
 func GenerateCV(c *gin.Context) {
-	var request data.CVRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		log.Printf("Fel vid JSON-bindning: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ogiltig förfrågan: " + err.Error()})
+	var request struct {
+		Name           string `json:"name"`
+		JobTitle       string `json:"jobTitle"`
+		JobDescription string `json:"jobDescription"`
+		Experience     string `json:"experience"`
+		Education      string `json:"education"`
+		Skills         string `json:"skills"`
+		Certifications string `json:"certifications"`
+		Bio           string `json:"bio"`
+		Email         string `json:"email"`
+		Phone         string `json:"phone"`
+		Location      string `json:"location"`
+	}
+
+	if err := c.BindJSON(&request); err != nil {
+		c.JSON(400, gin.H{"error": "Ogiltig förfrågan: " + err.Error()})
 		return
 	}
 
-	// Skapa en prompt för AI
-	aiPrompt := utils.CVPrompt{
-		Name:           request.DisplayName,
-		JobTitle:       request.Jobbtitel,
+	// Skapa CVPrompt med alla fält inklusive jobTitle och jobDescription
+	prompt := utils.CVPrompt{
+		Name:           request.Name,
+		JobTitle:       request.JobTitle,
 		JobDescription: request.JobDescription,
 		Experience:     request.Experience,
 		Education:      request.Education,
-		Skills:         request.Skills,
+			Skills:         request.Skills,
 		Certifications: request.Certifications,
 		Bio:           request.Bio,
-		Email:         request.Email,
+			Email:         request.Email,
 		Phone:         request.Phone,
 		Location:      request.Location,
 	}
 
 	// Generera AI-innehåll
-	aiResponse, err := utils.GenerateAIContent(aiPrompt)
+	aiResponse, err := utils.GenerateAIContent(prompt)
 	if err != nil {
 		log.Printf("Fel vid AI-generering: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kunde inte generera CV-innehåll"})
@@ -49,8 +61,8 @@ func GenerateCV(c *gin.Context) {
 
 	templateData := data.TemplateData{
 		PersonligInfo: data.PersonligInfo{
-			Namn:    getStringValueFromMap(personligInfoMap, "namn", request.DisplayName),
-			Titel:   getStringValueFromMap(personligInfoMap, "titel", request.Jobbtitel),
+			Namn:    getStringValueFromMap(personligInfoMap, "namn", request.Name),
+			Titel:   getStringValueFromMap(personligInfoMap, "titel", request.JobTitle),
 			Bild:    getStringValueFromMap(personligInfoMap, "bild", "https://via.placeholder.com/150"),
 			Kontakt: []data.KontaktItem{
 				{

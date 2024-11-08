@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -46,13 +47,20 @@ func main() {
 	// Lägg till Prometheus middleware
 	router.Use(prometheusMiddleware())
 
-	// CORS-konfiguration
+	// Hämta tillåtna ursprung från miljövariabel eller använd default
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	origins := []string{"https://smidra.com", "https://www.smidra.com"}
+	
+	if gin.Mode() == gin.DebugMode {
+		origins = append(origins, "http://localhost:3000")
+	}
+	
+	if allowedOrigins != "" {
+		origins = append(origins, strings.Split(allowedOrigins, ",")...)
+	}
+
 	config := cors.Config{
-		AllowOrigins: []string{
-			"https://smidra.com",
-			"https://www.smidra.com",
-			// Lägg endast till de domäner du faktiskt behöver
-		},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -60,14 +68,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}
 
-	// Lägg till debug middleware för CORS
-	router.Use(func(c *gin.Context) {
-		log.Printf("Inkommande förfrågan från Origin: %s", c.GetHeader("Origin"))
-		log.Printf("Request Method: %s", c.Request.Method)
-		log.Printf("Request Headers: %v", c.Request.Header)
-		c.Next()
-	})
-
+	// Använd CORS-middleware
 	router.Use(cors.New(config))
 
 	// Health och metrics endpoints

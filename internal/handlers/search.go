@@ -3,14 +3,15 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"time"
 	"os"
 	"strconv"
-	"github.com/gin-gonic/gin"
 	"sync"
+	"time"
+	
+	"github.com/gin-gonic/gin"
 )
 
 // Använd miljövariabler istället för konstanter
@@ -65,45 +66,27 @@ func SearchJobs(c *gin.Context) {
 		request.MaxJobs = defaultMaxJobs
 	}
 
-	log.Printf("=== Ny sökning påbörjad ===")
-	log.Printf("Sökparametrar: term='%s', maxJobs=%d", request.SearchTerm, request.MaxJobs)
-
 	jobs, err := fetchAllJobs(apiURL, request.SearchTerm, request.MaxJobs, maxRecords)
 	if err != nil {
-		log.Printf("❌ FEL vid jobbsökning: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("✅ Hittade totalt %d jobb för söktermen '%s'", len(jobs), request.SearchTerm)
-
 	// Skapa en kanal för jobbdetaljer
 	jobDetailsChan := make(chan map[string]interface{}, len(jobs))
-	// Skapa en WaitGroup för att vänta på alla goroutines
 	var wg sync.WaitGroup
-
-	// Begränsa antalet samtidiga requests med en semaphore
-	semaphore := make(chan struct{}, 200) // Ändrat från 50 till 200 samtidiga requests
+	semaphore := make(chan struct{}, 200)
 
 	// Starta goroutines för varje jobb
 	for _, job := range jobs {
 		wg.Add(1)
 		go func(jobID string) {
 			defer wg.Done()
-			
-			// Använd semaphore för att begränsa samtidiga requests
-			semaphore <- struct{}{} // Acquire
-			defer func() { <-semaphore }() // Release
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
 
-			log.Printf("🔍 Hämtar detaljer för jobb ID: %s", jobID)
 			if details, err := fetchJobDetails(jobDetailURL, jobID); err == nil && details != nil {
-				log.Printf("✅ Lyckades hämta detaljer för jobb ID: %s", jobID)
-				if title, ok := details["headline"].(string); ok {
-					log.Printf("📋 Jobbtitel: %s", title)
-				}
 				jobDetailsChan <- details
-			} else if err != nil {
-				log.Printf("❌ Fel vid hämtning av jobbdetaljer för ID %s: %v", jobID, err)
 			}
 		}(job["id"].(string))
 	}
@@ -120,14 +103,12 @@ func SearchJobs(c *gin.Context) {
 		jobDetails = append(jobDetails, detail)
 	}
 
-	log.Printf("Hämtade jobbdetaljer klart - antal_med_detaljer: %d, sökterm: %s", 
-		len(jobDetails), request.SearchTerm)
-
 	c.JSON(http.StatusOK, jobDetails)
 }
 
 func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[string]interface{}, error) {
 	var allAds []map[string]interface{}
+	seenJobs := make(map[string]bool)
 	startIndex := 0
 	currentTime := time.Now().UTC().Format(time.RFC3339)
 
@@ -135,15 +116,13 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		Timeout: 30 * time.Second,
 	}
 
-	log.Printf("=== Startar jobbsökning ===")
-	log.Printf("🔍 Sökterm: %s", searchTerm)
-	log.Printf("📊 Max antal jobb att hämta: %d", maxJobs)
-	log.Printf("📊 Max antal per request: %d", maxRecords)
-
 	for {
 		currentMaxRecords := maxRecords
 		if maxJobs > 0 {
 			remaining := maxJobs - len(allAds)
+			if remaining <= 0 {
+				break
+			}
 			if remaining < currentMaxRecords {
 				currentMaxRecords = remaining
 			}
@@ -172,18 +151,12 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		}
 
 		req.Header.Set("Content-Type", "application/json")
-		log.Printf("Gör API-anrop - startIndex: %d, maxRecords: %d", startIndex, currentMaxRecords)
-		
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Printf("Fel vid API-anrop: %v", err)
 			return nil, err
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			log.Printf("❌ API svarade med status: %d", resp.StatusCode)
-			body, _ := io.ReadAll(resp.Body)
-			log.Printf("📝 API svar: %s", string(body))
 			resp.Body.Close()
 			break
 		}
@@ -197,88 +170,92 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 
 		ads, ok := result["ads"].([]interface{})
 		if !ok || len(ads) == 0 {
-			log.Printf("Inga fler annonser hittades, avbryter. Totalt antal: %d", len(allAds))
 			break
 		}
 
-		log.Printf("✅ Hämtade %d nya jobb i denna batch", len(ads))
-		log.Printf("📊 Totalt antal hämtade jobb: %d", len(allAds))
-		
-		for i, ad := range ads {
+		newAdsCount := 0
+		for _, ad := range ads {
 			if adMap, ok := ad.(map[string]interface{}); ok {
-				allAds = append(allAds, adMap)
-				
-				// Logga detaljerad information för de första 2 jobben
-				if i < 2 {
-					prettyJSON, err := json.MarshalIndent(adMap, "", "    ")
-					if err == nil {
-						log.Printf("🔍 Detaljerad information för jobb %d:\n%s", i+1, string(prettyJSON))
+				if jobID, ok := adMap["id"].(string); ok {
+					if !seenJobs[jobID] {
+						seenJobs[jobID] = true
+						allAds = append(allAds, adMap)
+						newAdsCount++
 					}
 				}
 			}
 		}
 
+		if newAdsCount == 0 {
+			break
+		}
+
 		startIndex += len(ads)
-		log.Printf("Totalt antal hämtade annonser: %d", len(allAds))
 
 		if maxJobs > 0 && len(allAds) >= maxJobs {
-			log.Printf("Nått målantal annonser (%d), avbryter", maxJobs)
 			allAds = allAds[:maxJobs]
 			break
 		}
 
-		// Om vi fick färre annonser än begärt finns inga fler att hämta
 		if len(ads) < currentMaxRecords {
-			log.Printf("Färre annonser än begärt returnerades (%d < %d), inga fler finns", 
-				len(ads), currentMaxRecords)
 			break
 		}
 
-		// Lägg till en kort paus mellan anropen för att inte överbelasta API:et
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond) // Minskad väntetid
 	}
 
-	log.Printf("=== Jobbsökning avslutad ===")
-	log.Printf("📊 Slutligt antal hämtade jobb: %d", len(allAds))
 	return allAds, nil
 }
 
-func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error) {
-	log.Printf("🔍 Hämtar detaljer för jobb %s", jobID)
+const (
+	maxRetries = 3
+	retryDelay = 1 * time.Second
+)
 
+func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
-	resp, err := client.Get(jobDetailURL + jobID)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("❌ Kunde inte hämta detaljer för jobb %s, status: %d", jobID, resp.StatusCode)
-		return nil, nil
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var details map[string]interface{}
-	if err := json.Unmarshal(body, &details); err != nil {
-		return nil, err
-	}
-
-	// Logga detaljerad information för de första 2 jobben
-	if jobID == details["id"] && (len(details) > 0) {
-		prettyJSON, err := json.MarshalIndent(details, "", "    ")
-		if err == nil {
-			log.Printf("📋 Detaljerad jobbinformation för %s:\n%s", jobID, string(prettyJSON))
+	var lastErr error
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		if attempt > 1 {
+			time.Sleep(retryDelay * time.Duration(attempt-1))
 		}
+
+		resp, err := client.Get(jobDetailURL + jobID)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			lastErr = fmt.Errorf("status %d: %s", resp.StatusCode, string(body))
+			continue
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		var details map[string]interface{}
+		if err := json.Unmarshal(body, &details); err != nil {
+				lastErr = err
+				continue
+		}
+
+		if details["id"] == nil {
+			lastErr = fmt.Errorf("invalid job details response")
+			continue
+		}
+
+		return details, nil
 	}
 
-	log.Printf("✅ Hämtade detaljer för jobb %s", jobID)
-	return details, nil
+	return nil, fmt.Errorf("failed after %d attempts: %v", maxRetries, lastErr)
 } 
