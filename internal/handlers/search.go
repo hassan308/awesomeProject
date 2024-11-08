@@ -2,20 +2,22 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"sync"
 	"time"
-	
+
 	"github.com/gin-gonic/gin"
 )
 
-// Använd miljövariabler istället för konstanter
-func getConfig() (string, string, int, int) {
+// Konfigurationsinställningar hämtas från miljövariabler
+func getConfig() (string, string, int, int, int, time.Duration) {
 	apiURL := os.Getenv("PLATSBANKEN_API_URL")
 	if apiURL == "" {
 		apiURL = "https://platsbanken-api.arbetsformedlingen.se/jobs/v1/search"
@@ -26,21 +28,35 @@ func getConfig() (string, string, int, int) {
 		jobDetailURL = "https://platsbanken-api.arbetsformedlingen.se/jobs/v1/job/"
 	}
 
-	maxRecords := 100 // Default värde
+	maxRecords := 100 // Standardvärde
 	if val := os.Getenv("PLATSBANKEN_MAX_RECORDS"); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
+		if n, err := strconv.Atoi(val); err == nil && n > 0 {
 			maxRecords = n
 		}
 	}
 
 	defaultMaxJobs := 500 // Ändrat från 1000 till 500
 	if val := os.Getenv("PLATSBANKEN_DEFAULT_MAX_JOBS"); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
+		if n, err := strconv.Atoi(val); err == nil && n > 0 {
 			defaultMaxJobs = n
 		}
 	}
 
-	return apiURL, jobDetailURL, maxRecords, defaultMaxJobs
+	maxRetries := 3
+	if val := os.Getenv("PLATSBANKEN_MAX_RETRIES"); val != "" {
+		if n, err := strconv.Atoi(val); err == nil && n > 0 {
+			maxRetries = n
+		}
+	}
+
+	retryDelay := 1 * time.Second
+	if val := os.Getenv("PLATSBANKEN_RETRY_DELAY"); val != "" {
+		if d, err := time.ParseDuration(val); err == nil && d > 0 {
+			retryDelay = d
+		}
+	}
+
+	return apiURL, jobDetailURL, maxRecords, defaultMaxJobs, maxRetries, retryDelay
 }
 
 type SearchRequest struct {
@@ -49,16 +65,16 @@ type SearchRequest struct {
 }
 
 func SearchJobs(c *gin.Context) {
-	apiURL, jobDetailURL, maxRecords, defaultMaxJobs := getConfig()
+	apiURL, jobDetailURL, maxRecords, defaultMaxJobs, maxRetries, retryDelay := getConfig()
 
 	var request SearchRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ogiltigt förfrågningsformat"})
 		return
 	}
 
 	if request.SearchTerm == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Search term is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Sökterm krävs"})
 		return
 	}
 
@@ -66,29 +82,41 @@ func SearchJobs(c *gin.Context) {
 		request.MaxJobs = defaultMaxJobs
 	}
 
-	jobs, err := fetchAllJobs(apiURL, request.SearchTerm, request.MaxJobs, maxRecords)
+	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.MaxJobs, maxRecords, maxRetries, retryDelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Skapa en kanal för jobbdetaljer
-	jobDetailsChan := make(chan map[string]interface{}, len(jobs))
+	jobDetailsChan := make(chan map[string]interface{}, 100) // Minskat buffertstorlek
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 200)
+	semaphore := make(chan struct{}, 100) // Minskat till 100
 
 	// Starta goroutines för varje jobb
 	for _, job := range jobs {
+		jobID, ok := job["id"].(string)
+		if !ok {
+			// Hoppa över jobb utan giltigt ID
+			continue
+		}
+
 		wg.Add(1)
 		go func(jobID string) {
 			defer wg.Done()
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			if details, err := fetchJobDetails(jobDetailURL, jobID); err == nil && details != nil {
+			details, err := fetchJobDetails(c.Request.Context(), jobDetailURL, jobID, maxRetries, retryDelay)
+			if err != nil {
+				// Logga felet och fortsätt
+				fmt.Printf("Fel vid hämtning av detaljer för jobbID %s: %v\n", jobID, err)
+				return
+			}
+			if details != nil {
 				jobDetailsChan <- details
 			}
-		}(job["id"].(string))
+		}(jobID)
 	}
 
 	// Starta en goroutine för att stänga kanalen när alla jobb är klara
@@ -103,10 +131,15 @@ func SearchJobs(c *gin.Context) {
 		jobDetails = append(jobDetails, detail)
 	}
 
+	// Kontrollera om vi har fått färre jobb än förväntat
+	if len(jobDetails) < request.MaxJobs {
+		fmt.Printf("Förväntade %d jobb, men fick %d\n", request.MaxJobs, len(jobDetails))
+	}
+
 	c.JSON(http.StatusOK, jobDetails)
 }
 
-func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[string]interface{}, error) {
+func fetchAllJobs(ctx context.Context, apiURL, searchTerm string, maxJobs, maxRecords, maxRetries int, retryDelay time.Duration) ([]map[string]interface{}, error) {
 	var allAds []map[string]interface{}
 	seenJobs := make(map[string]bool)
 	startIndex := 0
@@ -117,6 +150,13 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 	}
 
 	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// Fortsätt
+		}
+
 		currentMaxRecords := maxRecords
 		if maxJobs > 0 {
 			remaining := maxJobs - len(allAds)
@@ -142,29 +182,30 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 
 		jsonData, err := json.Marshal(payload)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fel vid JSON-marshalling: %v", err)
 		}
 
-		req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fel vid skapande av HTTP-förfrågan: %v", err)
 		}
 
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fel vid HTTP-förfrågan: %v", err)
 		}
 
 		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
-			break
+			return nil, fmt.Errorf("API returnerade status %d: %s", resp.StatusCode, string(body))
 		}
 
 		var result map[string]interface{}
 		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 			resp.Body.Close()
-			return nil, err
+			return nil, fmt.Errorf("fel vid JSON-dekodning: %v", err)
 		}
 		resp.Body.Close()
 
@@ -176,11 +217,13 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 		newAdsCount := 0
 		for _, ad := range ads {
 			if adMap, ok := ad.(map[string]interface{}); ok {
-				if jobID, ok := adMap["id"].(string); ok {
-					if !seenJobs[jobID] {
-						seenJobs[jobID] = true
-						allAds = append(allAds, adMap)
-						newAdsCount++
+				jobID, ok := adMap["id"].(string)
+				if ok && !seenJobs[jobID] {
+					seenJobs[jobID] = true
+					allAds = append(allAds, adMap)
+					newAdsCount++
+					if maxJobs > 0 && len(allAds) >= maxJobs {
+						break
 					}
 				}
 			}
@@ -201,61 +244,75 @@ func fetchAllJobs(apiURL, searchTerm string, maxJobs, maxRecords int) ([]map[str
 			break
 		}
 
-		time.Sleep(50 * time.Millisecond) // Minskad väntetid
+		// Implementera en dynamisk backoff-strategi
+		time.Sleep(100 * time.Millisecond) // Justerad väntetid
 	}
 
 	return allAds, nil
 }
 
-const (
-	maxRetries = 3
-	retryDelay = 1 * time.Second
-)
-
-func fetchJobDetails(jobDetailURL, jobID string) (map[string]interface{}, error) {
+func fetchJobDetails(ctx context.Context, jobDetailURL, jobID string, maxRetries int, retryDelay time.Duration) (map[string]interface{}, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
+	fullURL, err := url.JoinPath(jobDetailURL, jobID)
+	if err != nil {
+		return nil, fmt.Errorf("fel vid konstruktion av URL: %v", err)
+	}
+
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// Fortsätt
+		}
+
 		if attempt > 1 {
 			time.Sleep(retryDelay * time.Duration(attempt-1))
 		}
 
-		resp, err := client.Get(jobDetailURL + jobID)
+		req, err := http.NewRequestWithContext(ctx, "GET", fullURL, nil)
 		if err != nil {
-			lastErr = err
+			lastErr = fmt.Errorf("fel vid skapande av HTTP-förfrågan: %v", err)
 			continue
 		}
 
-		defer resp.Body.Close()
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = fmt.Errorf("fel vid HTTP-förfrågan: %v", err)
+			continue
+		}
 
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
 			lastErr = fmt.Errorf("status %d: %s", resp.StatusCode, string(body))
 			continue
 		}
 
 		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
 		if err != nil {
-			lastErr = err
+			lastErr = fmt.Errorf("fel vid läsning av svar: %v", err)
 			continue
 		}
 
 		var details map[string]interface{}
 		if err := json.Unmarshal(body, &details); err != nil {
-				lastErr = err
-				continue
+			lastErr = fmt.Errorf("fel vid JSON-unmarshal: %v", err)
+			continue
 		}
 
-		if details["id"] == nil {
-			lastErr = fmt.Errorf("invalid job details response")
+		if _, exists := details["id"]; !exists {
+			lastErr = fmt.Errorf("ogiltigt svar: saknar 'id'")
 			continue
 		}
 
 		return details, nil
 	}
 
-	return nil, fmt.Errorf("failed after %d attempts: %v", maxRetries, lastErr)
-} 
+	return nil, fmt.Errorf("misslyckades efter %d försök: %v", maxRetries, lastErr)
+}
