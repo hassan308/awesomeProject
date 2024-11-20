@@ -81,6 +81,7 @@ func main() {
 	// API endpoints
 	router.POST("/generate_cv", handlers.GenerateCV)
 	router.POST("/search", handlers.SearchJobs)
+	router.POST("/recommended-jobs", handlers.GetRecommendedJobs)
 
 	port := os.Getenv("PORT")
 	if port == "" {
