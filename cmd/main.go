@@ -3,8 +3,10 @@ package main
 
 import (
 	"awesomeProject/internal/handlers"
+	"awesomeProject/internal/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
@@ -25,8 +27,72 @@ var (
 )
 
 func init() {
+	// Sätt debug-loggning
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.Printf("🚀 Startar applikationen...")
+	
 	// Registrera metrics
 	prometheus.MustRegister(httpRequestsTotal)
+
+	// Visa aktuell arbetskatalog
+	if wd, err := os.Getwd(); err == nil {
+		log.Printf("📂 Arbetskatalog: %s", wd)
+	}
+
+	// Visa ENV_FILE_PATH
+	envPath := os.Getenv("ENV_FILE_PATH")
+	log.Printf("📄 ENV_FILE_PATH: %s", envPath)
+
+	// Lista över möjliga platser för .env fil
+	possiblePaths := []string{
+		".env",                    // Samma katalog som binären
+		"../.env",                 // En nivå upp
+		"../../.env",              // Två nivåer upp
+		envPath,                   // Från miljövariabel
+	}
+
+	// Försök läsa .env från alla möjliga platser
+	var loaded bool
+	for _, path := range possiblePaths {
+		if path == "" {
+			continue
+		}
+		log.Printf("📂 Söker efter .env fil på: %s", path)
+		if err := godotenv.Load(path); err == nil {
+			log.Printf("✅ Laddade .env från: %s", path)
+			loaded = true
+			break
+		} else {
+			log.Printf("❌ Kunde inte läsa från %s: %v", path, err)
+		}
+	}
+
+	if !loaded {
+		log.Printf("⚠️ Kunde inte hitta .env fil på någon plats")
+	}
+
+	// Visa alla relevanta miljövariabler
+	log.Printf("🔧 Miljövariabler:")
+	aiProvider := os.Getenv("AI_PROVIDER")
+	log.Printf("AI_PROVIDER=%s", aiProvider)
+	log.Printf("HUGGINGFACE_API_KEY=%s", maskAPIKey(os.Getenv("HUGGINGFACE_API_KEY")))
+	log.Printf("HUGGINGFACE_MODEL_ID=%s", os.Getenv("HUGGINGFACE_MODEL_ID"))
+	log.Printf("GEMINI_API_KEY=%s", maskAPIKey(os.Getenv("GEMINI_API_KEY")))
+
+	// Initiera AI service och visa vilken som används
+	service := utils.GetAIService()
+	log.Printf("🤖 Använder AI service: %T", service)
+}
+
+// Hjälpfunktion för att maskera API-nycklar i loggen
+func maskAPIKey(key string) string {
+	if key == "" {
+		return "inte satt"
+	}
+	if len(key) <= 8 {
+		return "***"
+	}
+	return key[:4] + "..." + key[len(key)-4:]
 }
 
 func prometheusMiddleware() gin.HandlerFunc {
