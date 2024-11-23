@@ -107,54 +107,41 @@ func prometheusMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+	// Ladda miljövariabler från .env-fil
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	// Skapa en ny Gin router
 	router := gin.Default()
 
-	// Lägg till Prometheus middleware
-	router.Use(prometheusMiddleware())
-
-	// CORS-konfiguration
+	// Enkel CORS-konfiguration - låt Nginx hantera detaljerna
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{
-		"http://localhost:3000",
-		"https://smidra.com",
-		"https://www.smidra.com",
-	}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
-	config.AllowCredentials = true
-	config.ExposeHeaders = []string{"Content-Length"}
-	config.MaxAge = 12 * time.Hour
-	
+	config.AllowOrigins = []string{"*"}  // Tillåt alla origins, Nginx kommer hantera begränsningarna
+	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
 	router.Use(cors.New(config))
-	
-	// Lägg till loggning för att se alla inkommande requests
-	router.Use(func(c *gin.Context) {
-		log.Printf("Incoming %s request to %s from %s", 
-			c.Request.Method, 
-			c.Request.URL.Path, 
-			c.Request.Header.Get("Origin"))
-		c.Next()
-	})
+
+	// Prometheus middleware
+	router.Use(prometheusMiddleware())
 
 	// Health och metrics endpoints
 	router.GET("/health", handlers.HealthCheck)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// Lägg till stöd för templates
-	router.LoadHTMLGlob("internal/templates/*")
-
 	// API endpoints
-	router.POST("/generate_cv", handlers.GenerateCV)
 	router.POST("/search", handlers.SearchJobs)
+	router.POST("/generate_cv", handlers.GenerateCV)
+	router.POST("/analyze-search", handlers.AnalyzeSearchQuery)
 	router.POST("/recommended-jobs", handlers.GetRecommendedJobs)
-	router.POST("/analyze-search", handlers.AnalyzeSearchQuery)  // AI-endpoint
 
+	// Starta servern
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Startar server på port %s...\n", port)
+	
+	log.Printf("Server starting on port %s", port)
 	if err := router.Run(":" + port); err != nil {
-		log.Fatalf("Servern misslyckades: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
