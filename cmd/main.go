@@ -148,6 +148,7 @@ func main() {
 	router.POST("/generate_cv", handlers.GenerateCV)
 	router.POST("/search", handlers.SearchJobs)
 	router.POST("/recommended-jobs", handlers.GetRecommendedJobs)
+	router.POST("/analyze-search", handlers.AnalyzeSearchQuery)  // AI-endpoint
 
 	port := os.Getenv("PORT")
 	if port == "" {

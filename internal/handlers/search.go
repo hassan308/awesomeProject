@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"awesomeProject/internal/data"
+	"awesomeProject/internal/utils"
 )
 
 // Konfigurationsinställningar hämtas från miljövariabler
@@ -59,8 +62,10 @@ func getConfig() (string, string, int, int, int, time.Duration) {
 }
 
 type SearchRequest struct {
-	SearchTerm string `json:"search_term"`
-	MaxJobs    int    `json:"max_jobs,omitempty"`
+	SearchTerm         string `json:"search_term"`
+	MaxJobs           int    `json:"max_jobs,omitempty"`
+	Municipality      string `json:"municipality,omitempty"`
+	RequiresExperience *bool  `json:"requiresExperience,omitempty"`
 }
 
 func SearchJobs(c *gin.Context) {
@@ -77,26 +82,45 @@ func SearchJobs(c *gin.Context) {
 		return
 	}
 
+	// Analysera sökfrågan med AI
+	analysis, err := utils.AnalyzeSearchQuery(request.SearchTerm)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kunde inte analysera sökfrågan"})
+		return
+	}
+
+	// Använd municipality från AI-analys om den finns
+	if analysis.Municipality != "" {
+		request.Municipality = analysis.Municipality
+	}
+
 	if request.MaxJobs == 0 {
 		request.MaxJobs = defaultMaxJobs
 	}
 
-	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.MaxJobs, maxRecords, maxRetries, retryDelay)
+	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.Municipality, request.MaxJobs, maxRecords, maxRetries, retryDelay)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Skapa en map för att spara originaldata
+	originalJobData := make(map[string]map[string]interface{})
+	for _, job := range jobs {
+		if jobID, ok := job["id"].(string); ok {
+			originalJobData[jobID] = job
+		}
+	}
+
 	// Skapa en kanal för jobbdetaljer
-	jobDetailsChan := make(chan map[string]interface{}, 100) // Minskat buffertstorlek
+	jobDetailsChan := make(chan map[string]interface{}, 100)
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 100) // Minskat till 100
+	semaphore := make(chan struct{}, 100)
 
 	// Starta goroutines för varje jobb
 	for _, job := range jobs {
 		jobID, ok := job["id"].(string)
 		if !ok {
-			// Hoppa över jobb utan giltigt ID
 			continue
 		}
 
@@ -108,42 +132,62 @@ func SearchJobs(c *gin.Context) {
 
 			details, err := fetchJobDetails(c.Request.Context(), jobDetailURL, jobID, maxRetries, retryDelay)
 			if err != nil {
-				// Logga felet och fortsätt
-				fmt.Printf("Fel vid hämtning av detaljer för jobbID %s: %v\n", jobID, err)
 				return
 			}
 			if details != nil {
+				if original, exists := originalJobData[jobID]; exists {
+					for key, value := range original {
+						if _, hasKey := details[key]; !hasKey {
+							details[key] = value
+						}
+					}
+				}
 				jobDetailsChan <- details
 			}
 		}(jobID)
 	}
 
-	// Starta en goroutine för att stänga kanalen när alla jobb är klara
 	go func() {
 		wg.Wait()
 		close(jobDetailsChan)
 	}()
 
-	// Samla alla jobbdetaljer från kanalen
+	// Samla alla jobbdetaljer och filtrera baserat på erfarenhetskrav
 	var jobDetails []map[string]interface{}
 	for detail := range jobDetailsChan {
+		requiresExp, _ := detail["requiresExperience"].(bool)
+		
+		// Om AI-analysen indikerar att användaren söker jobb utan erfarenhetskrav
+		if analysis.RequiresExperience != nil && *analysis.RequiresExperience == false {
+			if requiresExp {
+				continue
+			}
+		}
+		
 		jobDetails = append(jobDetails, detail)
 	}
 
-	// Kontrollera om vi har fått färre jobb än förväntat
-	if len(jobDetails) < request.MaxJobs {
-		fmt.Printf("Förväntade %d jobb, men fick %d\n", request.MaxJobs, len(jobDetails))
+	// Kontrollera att jobDetails är en array innan vi skickar
+	if jobDetails == nil {
+		jobDetails = []map[string]interface{}{} // Tom array istället för nil
 	}
 
-	c.JSON(http.StatusOK, jobDetails)
+	response := gin.H{
+		"jobs": jobDetails,
+		"analysis": analysis,
+		"debug": gin.H{
+			"totalJobsBeforeFilter": len(jobs),
+			"totalJobsAfterFilter": len(jobDetails),
+			"searchQuery": request.SearchTerm,
+			"aiAnalysis": analysis,
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func GetRecommendedJobs(c *gin.Context) {
-	fmt.Println("\n=== Starting GetRecommendedJobs handler ===")
-    
     apiURL, jobDetailURL, _, _, maxRetries, retryDelay := getConfig()
-    fmt.Printf("\n1. API Configuration:\n")
-    fmt.Printf("Base API URL: %s\n", apiURL)
     
     // Skapa request body för Platsbanken API
     requestBody := map[string]interface{}{
@@ -158,20 +202,14 @@ func GetRecommendedJobs(c *gin.Context) {
     
     jsonBody, err := json.Marshal(requestBody)
     if err != nil {
-        fmt.Printf("Error creating request body: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create request body: %v", err)})
         return
     }
     
-    fmt.Printf("\n2. Request Details:\n")
-    fmt.Printf("Request Body: %s\n", string(jsonBody))
-    
     requestURL := fmt.Sprintf("%ssearch", apiURL)
-    fmt.Printf("Full Request URL: %s\n", requestURL)
     
     req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonBody))
     if err != nil {
-        fmt.Printf("Error creating request: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create request: %v", err)})
         return
     }
@@ -179,43 +217,25 @@ func GetRecommendedJobs(c *gin.Context) {
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("Accept", "application/json")
 
-    fmt.Printf("\nHeaders:\n")
-    for key, values := range req.Header {
-        fmt.Printf("%s: %v\n", key, values)
-    }
-
     client := &http.Client{
         Timeout: 30 * time.Second,
     }
 
-    fmt.Println("\n3. Making API Request...")
     resp, err := client.Do(req)
     if err != nil {
-        fmt.Printf("Error making request: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Request failed: %v", err)})
         return
     }
     defer resp.Body.Close()
 
-    fmt.Printf("\n4. API Response:\n")
-    fmt.Printf("Status Code: %d\n", resp.Status)
-    fmt.Printf("Response Headers:\n")
-    for key, values := range resp.Header {
-        fmt.Printf("%s: %v\n", key, values)
-    }
-
     body, err := io.ReadAll(resp.Body)
     if err != nil {
-        fmt.Printf("Error reading response body: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to read response: %v", err)})
         return
     }
 
-    fmt.Printf("\n5. Response Body (first 500 chars):\n%s\n", string(body)[:min(len(string(body)), 500)])
-
     var result map[string]interface{}
     if err := json.Unmarshal(body, &result); err != nil {
-        fmt.Printf("Error parsing JSON: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{
             "error": fmt.Sprintf("Failed to parse response: %v", err),
             "body": string(body),
@@ -223,20 +243,14 @@ func GetRecommendedJobs(c *gin.Context) {
         return
     }
 
-    total := result["total"]
-    fmt.Printf("\n6. Total jobs available: %v\n", total)
-
     ads, ok := result["ads"].([]interface{})
     if !ok {
-        fmt.Printf("No ads found in response structure: %+v\n", result)
         c.JSON(http.StatusInternalServerError, gin.H{
             "error": "No jobs found in response",
             "response": result,
         })
         return
     }
-
-    fmt.Printf("Number of ads received: %d\n", len(ads))
 
     // Skapa en kanal för jobbdetaljer
     jobDetailsChan := make(chan map[string]interface{}, len(ads))
@@ -247,13 +261,11 @@ func GetRecommendedJobs(c *gin.Context) {
     for _, ad := range ads {
         jobMap, ok := ad.(map[string]interface{})
         if !ok {
-            fmt.Printf("Invalid job data format: %+v\n", ad)
             continue
         }
 
         jobID, ok := jobMap["id"].(string)
         if !ok || jobID == "" {
-            fmt.Printf("Invalid or missing job ID: %+v\n", jobMap)
             continue
         }
 
@@ -265,7 +277,6 @@ func GetRecommendedJobs(c *gin.Context) {
 
             details, err := fetchJobDetails(c.Request.Context(), jobDetailURL, jobID, maxRetries, retryDelay)
             if err != nil {
-                fmt.Printf("Error fetching details for job %s: %v\n", jobID, err)
                 return
             }
             if details != nil {
@@ -286,14 +297,7 @@ func GetRecommendedJobs(c *gin.Context) {
         jobDetails = append(jobDetails, detail)
     }
 
-    fmt.Printf("\n7. Final Results:\n")
-    fmt.Printf("Successfully fetched details for %d jobs\n", len(jobDetails))
-    if len(jobDetails) > 0 {
-        prettyJSON, _ := json.MarshalIndent(jobDetails[0], "", "  ")
-        fmt.Printf("First job example:\n%s\n", string(prettyJSON))
-    }
-
-    c.JSON(http.StatusOK, jobDetails)
+	c.JSON(http.StatusOK, jobDetails)
 }
 
 func min(a, b int) int {
@@ -371,11 +375,29 @@ func fetchJobDetails(ctx context.Context, jobDetailURL, jobID string, maxRetries
 	return nil, fmt.Errorf("kunde inte hämta jobbdetaljer efter %d försök", maxRetries)
 }
 
-func fetchAllJobs(ctx context.Context, apiURL, searchTerm string, maxJobs, maxRecords, maxRetries int, retryDelay time.Duration) ([]map[string]interface{}, error) {
+func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName string, maxJobs, maxRecords, maxRetries int, retryDelay time.Duration) ([]map[string]interface{}, error) {
 	var allAds []map[string]interface{}
 	seenJobs := make(map[string]bool)
 	startIndex := 0
-	currentTime := time.Now().UTC().Format(time.RFC3339)
+	
+	currentTime := time.Now().Format(time.RFC3339)
+
+	var locationFilter map[string]string
+	if municipalityName != "" {
+		if strings.Contains(municipalityName, "län") {
+			locationFilter = map[string]string{
+				"type":  "region",
+				"value": data.GetMunicipalityID(municipalityName),
+			}
+		} else {
+			if municipalityID := data.GetMunicipalityID(municipalityName); municipalityID != "" {
+				locationFilter = map[string]string{
+					"type":  "municipality",
+					"value": municipalityID,
+				}
+			}
+		}
+	}
 
 	client := &http.Client{
 		Timeout: 30 * time.Second,
@@ -386,7 +408,6 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm string, maxJobs, maxRe
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			// Fortsätt
 		}
 
 		currentMaxRecords := maxRecords
@@ -400,16 +421,22 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm string, maxJobs, maxRe
 			}
 		}
 
+		filters := []map[string]string{
+			{"type": "freetext", "value": searchTerm},
+		}
+		
+		if locationFilter != nil {
+			filters = append(filters, locationFilter)
+		}
+
 		payload := map[string]interface{}{
-			"filters": []map[string]string{
-				{"type": "freetext", "value": searchTerm},
-			},
+			"filters":    filters,
 			"fromDate":   nil,
-			"order":      "date",
-			"source":     "pb",
+			"order":      "relevance",
+			"maxRecords": currentMaxRecords,
 			"startIndex": startIndex,
 			"toDate":     currentTime,
-			"maxRecords": currentMaxRecords,
+			"source":     "pb",
 		}
 
 		jsonData, err := json.Marshal(payload)
@@ -476,8 +503,7 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm string, maxJobs, maxRe
 			break
 		}
 
-		// Implementera en dynamisk backoff-strategi
-		time.Sleep(100 * time.Millisecond) // Justerad väntetid
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return allAds, nil
