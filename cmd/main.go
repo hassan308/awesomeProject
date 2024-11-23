@@ -4,12 +4,14 @@ package main
 import (
 	"awesomeProject/internal/handlers"
 	"awesomeProject/internal/utils"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"os"
+	"time"
 )
 
 // Definiera metrics
@@ -111,34 +113,26 @@ func main() {
 	router.Use(prometheusMiddleware())
 
 	// CORS-konfiguration
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{
+		"http://localhost:3000",
+		"https://smidra.com",
+		"https://www.smidra.com",
+	}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	config.AllowCredentials = true
+	config.ExposeHeaders = []string{"Content-Length"}
+	config.MaxAge = 12 * time.Hour
+	
+	router.Use(cors.New(config))
+	
+	// Lägg till loggning för att se alla inkommande requests
 	router.Use(func(c *gin.Context) {
-		origin := c.Request.Header.Get("Origin")
-		allowedOrigins := map[string]bool{
-			"http://localhost:3000":   true,
-			"https://smidra.com":      true,
-			"https://www.smidra.com":  true,
-			"http://smidra.com":       true,
-			"http://www.smidra.com":   true,
-		}
-
-		if allowedOrigins[origin] {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
-			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
-			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
-			c.Writer.Header().Set("Access-Control-Max-Age", "43200") // 12 hours
-		}
-
-		// Handle preflight OPTIONS request
-		if c.Request.Method == "OPTIONS" {
-			if allowedOrigins[origin] {
-				c.AbortWithStatus(204)
-				return
-			}
-		}
-
-		log.Printf("Incoming request: %s %s from origin: %s", c.Request.Method, c.Request.URL.Path, origin)
+		log.Printf("Incoming %s request to %s from %s", 
+			c.Request.Method, 
+			c.Request.URL.Path, 
+			c.Request.Header.Get("Origin"))
 		c.Next()
 	})
 
