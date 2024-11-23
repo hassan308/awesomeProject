@@ -4,14 +4,12 @@ package main
 import (
 	"awesomeProject/internal/handlers"
 	"awesomeProject/internal/utils"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"os"
-	"time"
 )
 
 // Definiera metrics
@@ -113,20 +111,36 @@ func main() {
 	router.Use(prometheusMiddleware())
 
 	// CORS-konfiguration
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{
-			"http://localhost:3000",
-			"https://smidra.com",
-			"https://www.smidra.com",
-			"http://smidra.com",
-			"http://www.smidra.com",
-		},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	router.Use(func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		allowedOrigins := map[string]bool{
+			"http://localhost:3000":   true,
+			"https://smidra.com":      true,
+			"https://www.smidra.com":  true,
+			"http://smidra.com":       true,
+			"http://www.smidra.com":   true,
+		}
+
+		if allowedOrigins[origin] {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+			c.Writer.Header().Set("Access-Control-Max-Age", "43200") // 12 hours
+		}
+
+		// Handle preflight OPTIONS request
+		if c.Request.Method == "OPTIONS" {
+			if allowedOrigins[origin] {
+				c.AbortWithStatus(204)
+				return
+			}
+		}
+
+		log.Printf("Incoming request: %s %s from origin: %s", c.Request.Method, c.Request.URL.Path, origin)
+		c.Next()
+	})
 
 	// Health och metrics endpoints
 	router.GET("/health", handlers.HealthCheck)
