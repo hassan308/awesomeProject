@@ -297,7 +297,20 @@ func GetRecommendedJobs(c *gin.Context) {
         jobDetails = append(jobDetails, detail)
     }
 
-	c.JSON(http.StatusOK, jobDetails)
+    // Kontrollera att jobDetails är en array innan vi skickar
+    if jobDetails == nil {
+        jobDetails = []map[string]interface{}{} // Tom array istället för nil
+    }
+
+    response := gin.H{
+        "jobs": jobDetails,
+        "debug": gin.H{
+            "totalJobs": len(jobDetails),
+            "timestamp": time.Now().Format(time.RFC3339),
+        },
+    }
+
+    c.JSON(http.StatusOK, response)
 }
 
 func min(a, b int) int {
