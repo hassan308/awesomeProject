@@ -113,34 +113,21 @@ func main() {
 	// Lägg till Prometheus middleware
 	router.Use(prometheusMiddleware())
 
-	// Hämta tillåtna ursprung från miljövariabel eller använd default
-	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
-	origins := []string{
-		"https://smidra.com",
-		"https://www.smidra.com",
-		"http://smidra.com",
-		"http://www.smidra.com",
-	}
-	
-	if gin.Mode() == gin.DebugMode {
-		origins = append(origins, "http://localhost:3000")
-	}
-	
-	if allowedOrigins != "" {
-		origins = append(origins, strings.Split(allowedOrigins, ",")...)
-	}
-
-	config := cors.Config{
-		AllowOrigins:     origins,
+	// CORS-konfiguration
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{
+			"http://localhost:3000",
+			"https://smidra.com",
+			"https://www.smidra.com",
+			"http://smidra.com",
+			"http://www.smidra.com",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}
-
-	// Använd CORS-middleware
-	router.Use(cors.New(config))
+	}))
 
 	// Health och metrics endpoints
 	router.GET("/health", handlers.HealthCheck)
