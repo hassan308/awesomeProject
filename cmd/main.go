@@ -115,7 +115,12 @@ func main() {
 
 	// Hämta tillåtna ursprung från miljövariabel eller använd default
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
-	origins := []string{"https://smidra.com", "https://www.smidra.com"}
+	origins := []string{
+		"https://smidra.com",
+		"https://www.smidra.com",
+		"http://smidra.com",
+		"http://www.smidra.com",
+	}
 	
 	if gin.Mode() == gin.DebugMode {
 		origins = append(origins, "http://localhost:3000")
