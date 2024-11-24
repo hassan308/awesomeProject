@@ -30,7 +30,7 @@ func GenerateCV(prompt string, apiKey string) (string, error) {
 	}
 
 	// Bygg API URL baserat på Googles dokumentation
-	apiURL := "https://generativeai.googleapis.com/v1/models/gemini-1.5-flash:generate"
+	apiURL := "https://generativeai.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent"
 
 	// Skapa en ny HTTP POST-begäran
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(requestBody))

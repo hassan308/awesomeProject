@@ -61,33 +61,29 @@ func AnalyzeSearchQuery(query string) (*SearchAnalysis, error) {
 	result, err := tryHuggingFace(query)
 	if err != nil {
 		log.Printf("Hugging Face misslyckades: %v, försöker med Gemini istället", err)
-		// Bara gå till Gemini om vi inte fick några användbara värden från Hugging Face
-		if result == nil || (result.Municipality == "" && result.RequiresExperience == nil) {
-			return tryGemini(query)
-		}
-		// Om vi har municipality eller requiresExperience, använd resultatet med "jobb" som default
-		if result == nil {
-			result = &SearchAnalysis{}
-		}
-		if result.Job == "" {
-			result.Job = "jobb"
-		}
-		return result, nil
+		return tryGemini(query)
 	}
+
+	// Om HF returnerade ett resultat med alla fält som null, använd Gemini
+	if result != nil && result.Job == "" && result.Municipality == "" && result.RequiresExperience == nil {
+		log.Printf("Hugging Face returnerade null-värden, försöker med Gemini istället")
+		return tryGemini(query)
+	}
+
+	// Om job är tomt men vi har andra värden, sätt det till "jobb"
+	if result != nil && result.Job == "" && (result.Municipality != "" || result.RequiresExperience != nil) {
+		result.Job = "jobb"
+	}
+
 	return result, nil
 }
 
-// HFStreamResponse representerar svarsstrukturen från Hugging Face streaming API
-type HFStreamResponse struct {
-	Choices []struct {
-		Delta struct {
-			Content string `json:"content"`
-		} `json:"delta"`
-	} `json:"choices"`
-}
-
 func tryHuggingFace(query string) (*SearchAnalysis, error) {
-	apiKey := "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"
+	apiKey := getAPIKey(HuggingfaceProvider)
+	if apiKey == "" {
+		return nil, fmt.Errorf("ingen Huggingface API-nyckel tillgänglig")
+	}
+
 	url := "https://api-inference.huggingface.co/v1/chat/completions"
 
 	log.Printf("🔍 Skickar förfrågan till HF API med query: %s", query)
@@ -117,7 +113,7 @@ Analysera följande jobbsökningsfråga och extrahera information.
 Om personen specifikt nämner att de söker jobb utan erfarenhetskrav eller entry-level/junior-positioner, sätt requiresExperience till false.
 Om personen specifikt söker senior-positioner eller jobb som kräver erfarenhet, sätt requiresExperience till true.
 Om personen inte nämner något om erfarenhet, sätt requiresExperience till null.
-Försök att förstå vad kunden söker för yrke och ge bra namn på yrke till jobb-falten.
+
 Returnera ENDAST ett JSON-objekt med följande struktur:
 {
     "job": "extraherad jobbtitel",
@@ -131,10 +127,14 @@ Exempel:
 
 Sökfråga: %s`, query)
 
+	// Skapa request body
 	requestBody := map[string]interface{}{
-		"model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+		"model": "meta-llama/Llama-3.2-3B-Instruct",
 		"messages": []map[string]string{
-			{"role": "user", "content": promptText},
+			{
+				"role":    "user",
+				"content": promptText,
+			},
 		},
 		"temperature": 0.3,
 		"max_tokens": 2048,
@@ -212,30 +212,25 @@ Sökfråga: %s`, query)
 	jsonStr := responseStr[startIdx : endIdx+1]
 	log.Printf("📥 Extraherat JSON-svar: %s", jsonStr)
 
-	var result SearchAnalysis
+	var result *SearchAnalysis
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, fmt.Errorf("kunde inte unmarshalla svar: %v", err)
 	}
 
-	// Om job är tomt men vi har andra värden, sätt det till "jobb"
-	if result.Job == "" && (result.Municipality != "" || result.RequiresExperience != nil) {
-		result.Job = "jobb"
-	}
-
-	return &result, nil
+	return result, nil
 }
 
 func tryGemini(query string) (*SearchAnalysis, error) {
 	ctx := context.Background()
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(getAPIKey()))
+	client, err := genai.NewClient(ctx, option.WithAPIKey(getAPIKey(GeminiProvider)))
 	if err != nil {
 		return nil, fmt.Errorf("kunde inte skapa Gemini-klient: %v", err)
 	}
 	defer client.Close()
 
 	model := client.GenerativeModel("gemini-1.5-flash-8b")
-	model.SetTemperature(0.1)
+	model.SetTemperature(0.2)
 	model.SetTopK(40)
 	model.SetTopP(0.95)
 
@@ -259,7 +254,7 @@ func tryGemini(query string) (*SearchAnalysis, error) {
 ]
 
 VIKTIGT: Om användaren nämner ett län (t.ex. "gävleborg", "gävleborgs län"), returnera ALLTID länets fullständiga namn (t.ex. "Gävleborgs län") i municipality-fältet, inte en stad i länet.
-
+Försök att översätta till svenska språk från kundens fråga från stad till yrke. Alltid på svenska.
 Analysera följande jobbsökningsfråga och extrahera information.
 Om personen specifikt nämner att de söker jobb utan erfarenhetskrav eller entry-level/junior-positioner, sätt requiresExperience till false.
 Om personen specifikt söker senior-positioner eller jobb som kräver erfarenhet, sätt requiresExperience till true.

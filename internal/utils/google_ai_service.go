@@ -17,7 +17,7 @@ type GoogleAIService struct {
 
 func NewGoogleAIService() *GoogleAIService {
 	return &GoogleAIService{
-		apiKey: getAPIKey(), // Använder den gemensamma getAPIKey-funktionen från ai_service.go
+		apiKey: getAPIKey(GeminiProvider), // Använder den gemensamma getAPIKey-funktionen från ai_service.go
 	}
 }
 
@@ -31,7 +31,7 @@ func (s *GoogleAIService) GenerateContent(prompt CVPrompt) (map[string]interface
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-pro")
+	model := client.GenerativeModel("gemini-1.5-flash-8b")
 	promptText := buildPrompt(prompt)
 
 	resp, err := model.GenerateContent(ctx, genai.Text(promptText))
