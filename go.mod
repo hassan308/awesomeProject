@@ -1,6 +1,6 @@
 module awesomeProject
 
-go 1.21
+go 1.21.4
 
 require (
 	github.com/bytedance/sonic v1.12.3
@@ -10,6 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.20.5
+	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/api v0.203.0
 )
 
@@ -52,7 +53,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.opencensus.io v0.24.0 // indirect

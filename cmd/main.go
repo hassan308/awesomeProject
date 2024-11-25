@@ -93,6 +93,18 @@ func maskAPIKey(key string) string {
 	return key[:4] + "..." + key[len(key)-4:]
 }
 
+func loadEnv() {
+	// Försök läsa .env-filen
+	if err := godotenv.Load(); err != nil {
+		log.Println("Varning: Kunde inte hitta .env fil")
+	}
+	
+	// Läs även från parent directory
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Println("Varning: Kunde inte hitta .env fil i parent directory")
+	}
+}
+
 func prometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -106,10 +118,8 @@ func prometheusMiddleware() gin.HandlerFunc {
 }
 
 func main() {
-	// Ladda miljövariabler från .env-fil
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+	// Läs in miljövariabler
+	loadEnv()
 
 	// Skapa en ny Gin router
 	router := gin.Default()

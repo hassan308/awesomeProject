@@ -15,7 +15,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"awesomeProject/internal/data"
-	"awesomeProject/internal/utils"
 )
 
 // Konfigurationsinställningar hämtas från miljövariabler
@@ -82,18 +81,6 @@ func SearchJobs(c *gin.Context) {
 		return
 	}
 
-	// Analysera sökfrågan med AI
-	analysis, err := utils.AnalyzeSearchQuery(request.SearchTerm)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kunde inte analysera sökfrågan"})
-		return
-	}
-
-	// Använd municipality från AI-analys om den finns
-	if analysis.Municipality != "" {
-		request.Municipality = analysis.Municipality
-	}
-
 	if request.MaxJobs == 0 {
 		request.MaxJobs = defaultMaxJobs
 	}
@@ -113,9 +100,9 @@ func SearchJobs(c *gin.Context) {
 	}
 
 	// Skapa en kanal för jobbdetaljer
-	jobDetailsChan := make(chan map[string]interface{}, 100)
+	jobDetailsChan := make(chan map[string]interface{}, len(jobs))
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 100)
+	semaphore := make(chan struct{}, 10) // Begränsa till 10 samtidiga anrop
 
 	// Starta goroutines för varje jobb
 	for _, job := range jobs {
@@ -127,8 +114,8 @@ func SearchJobs(c *gin.Context) {
 		wg.Add(1)
 		go func(jobID string) {
 			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
+			semaphore <- struct{}{} // Acquire semaphore
+			defer func() { <-semaphore }() // Release semaphore
 
 			details, err := fetchJobDetails(c.Request.Context(), jobDetailURL, jobID, maxRetries, retryDelay)
 			if err != nil {
@@ -152,18 +139,9 @@ func SearchJobs(c *gin.Context) {
 		close(jobDetailsChan)
 	}()
 
-	// Samla alla jobbdetaljer och filtrera baserat på erfarenhetskrav
+	// Samla alla jobbdetaljer
 	var jobDetails []map[string]interface{}
 	for detail := range jobDetailsChan {
-		requiresExp, _ := detail["requiresExperience"].(bool)
-		
-		// Om AI-analysen indikerar att användaren söker jobb utan erfarenhetskrav
-		if analysis.RequiresExperience != nil && *analysis.RequiresExperience == false {
-			if requiresExp {
-				continue
-			}
-		}
-		
 		jobDetails = append(jobDetails, detail)
 	}
 
@@ -174,12 +152,10 @@ func SearchJobs(c *gin.Context) {
 
 	response := gin.H{
 		"jobs": jobDetails,
-		"analysis": analysis,
 		"debug": gin.H{
 			"totalJobsBeforeFilter": len(jobs),
 			"totalJobsAfterFilter": len(jobDetails),
 			"searchQuery": request.SearchTerm,
-			"aiAnalysis": analysis,
 		},
 	}
 

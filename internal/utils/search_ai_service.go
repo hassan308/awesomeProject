@@ -64,15 +64,10 @@ func AnalyzeSearchQuery(query string) (*SearchAnalysis, error) {
 		return tryGemini(query)
 	}
 
-	// Om HF returnerade ett resultat med alla fält som null, använd Gemini
-	if result != nil && result.Job == "" && result.Municipality == "" && result.RequiresExperience == nil {
-		log.Printf("Hugging Face returnerade null-värden, försöker med Gemini istället")
+	// Anropa Gemini endast om ALLA fält är null eller tomma
+	if result == nil || (result.Job == "" && result.Municipality == "" && result.RequiresExperience == nil) {
+		log.Printf("Hugging Face returnerade alla fält som null, försöker med Gemini istället")
 		return tryGemini(query)
-	}
-
-	// Om job är tomt men vi har andra värden, sätt det till "jobb"
-	if result != nil && result.Job == "" && (result.Municipality != "" || result.RequiresExperience != nil) {
-		result.Job = "jobb"
 	}
 
 	return result, nil
@@ -113,7 +108,7 @@ Analysera följande jobbsökningsfråga och extrahera information.
 Om personen specifikt nämner att de söker jobb utan erfarenhetskrav eller entry-level/junior-positioner, sätt requiresExperience till false.
 Om personen specifikt söker senior-positioner eller jobb som kräver erfarenhet, sätt requiresExperience till true.
 Om personen inte nämner något om erfarenhet, sätt requiresExperience till null.
-
+Försök att förstå vad kunden söker för yrke och ge bra namn på yrke till jobb-falten samam sak för städer han bor i Sverige.
 Returnera ENDAST ett JSON-objekt med följande struktur:
 {
     "job": "extraherad jobbtitel",
@@ -124,17 +119,13 @@ Returnera ENDAST ett JSON-objekt med följande struktur:
 Exempel:
 - Om användaren skriver "jobb i gävleborg" -> municipality: "Gävleborgs län"
 - Om användaren skriver "jobb i gävle" -> municipality: "Gävle"
-
+Om de är annat språk än svenska då ska alla objekt i JSON-objektet vara null viktigt.
 Sökfråga: %s`, query)
 
-	// Skapa request body
 	requestBody := map[string]interface{}{
-		"model": "meta-llama/Llama-3.2-3B-Instruct",
+		"model": "Qwen/Qwen2.5-Coder-32B-Instruct",
 		"messages": []map[string]string{
-			{
-				"role":    "user",
-				"content": promptText,
-			},
+			{"role": "user", "content": promptText},
 		},
 		"temperature": 0.3,
 		"max_tokens": 2048,
@@ -212,12 +203,17 @@ Sökfråga: %s`, query)
 	jsonStr := responseStr[startIdx : endIdx+1]
 	log.Printf("📥 Extraherat JSON-svar: %s", jsonStr)
 
-	var result *SearchAnalysis
+	var result SearchAnalysis
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, fmt.Errorf("kunde inte unmarshalla svar: %v", err)
 	}
 
-	return result, nil
+	// Om job är tomt men vi har andra värden, sätt det till "jobb"
+	if result.Job == "" && (result.Municipality != "" || result.RequiresExperience != nil) {
+		result.Job = "jobb"
+	}
+
+	return &result, nil
 }
 
 func tryGemini(query string) (*SearchAnalysis, error) {
