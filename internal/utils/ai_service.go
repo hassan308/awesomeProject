@@ -142,8 +142,10 @@ func generateWithHuggingface(prompt CVPrompt) (map[string]interface{}, error) {
 			if data == "[DONE]" {
 				break
 			}
+			// Logga bara om det är ett fel
 			var streamResponse HFStreamResponse
 			if err := json.Unmarshal([]byte(data), &streamResponse); err != nil {
+				log.Printf("⚠️ Kunde inte parsa stream response: %v", err)
 				continue
 			}
 
@@ -159,7 +161,7 @@ func generateWithHuggingface(prompt CVPrompt) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("fel vid läsning av stream: %v", err)
 	}
 
-	// Extrahera JSON från svaret
+	// Logga bara slutresultatet
 	responseStr := fullResponse.String()
 	startIdx := strings.Index(responseStr, "{")
 	endIdx := strings.LastIndex(responseStr, "}")
@@ -315,7 +317,23 @@ func addEmojisToResponse(response map[string]interface{}) map[string]interface{}
 	return response
 }
 
+// truncateText begränsar textlängden till max 500 tecken
+func truncateText(text string, maxLength int) string {
+    if len(text) <= maxLength {
+        return text
+    }
+    return text[:maxLength] + "..."
+}
+
 func buildPrompt(prompt CVPrompt) string {
+    // Begränsa längden på alla textfält
+    jobDesc := truncateText(prompt.JobDescription, 700)
+    exp := truncateText(prompt.Experience, 500)
+    edu := truncateText(prompt.Education, 300)
+    skills := truncateText(prompt.Skills, 200)
+    cert := truncateText(prompt.Certifications, 200)
+    bio := truncateText(prompt.Bio, 200)
+
 	return fmt.Sprintf(`Skapa ett detaljerat och personligt CV. Fyll på informationen på kreativ sätt och hitta på så att den låter realikstisk på alla fält använd dig av  på följande information:
 Mitt Namn: "exemple"
 Jobbtitel som jag söker till: %s
@@ -380,12 +398,12 @@ gå rakt på saken
 }`,
         // Första set av parametrar för informationen
         prompt.JobTitle,
-        prompt.JobDescription,
-        prompt.Experience,
-        prompt.Education,
-        prompt.Skills,
-        prompt.Certifications,
-        prompt.Bio,
+        jobDesc,
+        exp,
+        edu,
+        skills,
+        cert,
+        bio,
         // Andra set av parametrar för JSON-strukturen
         prompt.JobTitle,
         prompt.Phone,
