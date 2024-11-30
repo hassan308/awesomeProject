@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -85,11 +86,16 @@ func SearchJobs(c *gin.Context) {
 		request.MaxJobs = defaultMaxJobs
 	}
 
+	log.Printf("Söker efter jobb med term: '%s' i kommun: '%s'", request.SearchTerm, request.Municipality)
+
 	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.Municipality, request.MaxJobs, maxRecords, maxRetries, retryDelay)
 	if err != nil {
+		log.Printf("Fel vid jobbsökning: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	log.Printf("Hittade %d jobb i initial sökning", len(jobs))
 
 	// Skapa en map för att spara originaldata
 	originalJobData := make(map[string]map[string]interface{})
@@ -119,16 +125,10 @@ func SearchJobs(c *gin.Context) {
 
 			details, err := fetchJobDetails(c.Request.Context(), jobDetailURL, jobID, maxRetries, retryDelay)
 			if err != nil {
+				log.Printf("Kunde inte hämta detaljer för jobb %s: %v", jobID, err)
 				return
 			}
 			if details != nil {
-				if original, exists := originalJobData[jobID]; exists {
-					for key, value := range original {
-						if _, hasKey := details[key]; !hasKey {
-							details[key] = value
-						}
-					}
-				}
 				jobDetailsChan <- details
 			}
 		}(jobID)
@@ -141,21 +141,24 @@ func SearchJobs(c *gin.Context) {
 
 	// Samla alla jobbdetaljer
 	var jobDetails []map[string]interface{}
+	totalCount := 0
+	
 	for detail := range jobDetailsChan {
+		totalCount++
 		jobDetails = append(jobDetails, detail)
 	}
 
-	// Kontrollera att jobDetails är en array innan vi skickar
-	if jobDetails == nil {
-		jobDetails = []map[string]interface{}{} // Tom array istället för nil
-	}
+	log.Printf("\n=== SÖKRESULTAT ===")
+	log.Printf("Totalt antal jobb: %d", totalCount)
+	log.Printf("Antal jobb efter filtrering: %d", len(jobDetails))
 
 	response := gin.H{
 		"jobs": jobDetails,
 		"debug": gin.H{
 			"totalJobsBeforeFilter": len(jobs),
-			"totalJobsAfterFilter": len(jobDetails),
-			"searchQuery": request.SearchTerm,
+			"totalJobsAfterFilter":  len(jobDetails),
+			"searchQuery":           request.SearchTerm,
+			"municipality":          request.Municipality,
 		},
 	}
 
@@ -373,17 +376,26 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName stri
 
 	var locationFilter map[string]string
 	if municipalityName != "" {
+		log.Printf("\n=== KONVERTERAR PLATS ===")
 		if strings.Contains(municipalityName, "län") {
+			municipalityID := data.GetMunicipalityID(municipalityName)
+			log.Printf("🔍 Län: '%s'", municipalityName)
+			log.Printf("🎯 ID: '%s'", municipalityID)
 			locationFilter = map[string]string{
 				"type":  "region",
-				"value": data.GetMunicipalityID(municipalityName),
+				"value": municipalityID,
 			}
 		} else {
-			if municipalityID := data.GetMunicipalityID(municipalityName); municipalityID != "" {
+			municipalityID := data.GetMunicipalityID(municipalityName)
+			log.Printf("🔍 Kommun: '%s'", municipalityName)
+			log.Printf("🎯 ID: '%s'", municipalityID)
+			if municipalityID != "" {
 				locationFilter = map[string]string{
 					"type":  "municipality",
 					"value": municipalityID,
 				}
+			} else {
+				log.Printf("⚠️ Kunde inte hitta ID för kommun: %s", municipalityName)
 			}
 		}
 	}

@@ -154,7 +154,7 @@ var MunicipalityMap = map[string]string{
 	"Lidingö":          "FBbF_mda_TYD",
 	"Nacka":            "aYA7_PpG_BqP",
 	"Norrtälje":        "btgf_fS7_sKG",
-	"Nykvarn":          "mBKv_q3B_SK8",
+	"Nykvarn":          "mBKv_q3B_B_SK8",
 	"Nynäshamn":        "37UU_T7x_oxG",
 	"Salem":            "4KBw_CPU_VQv",
 	"Sigtuna":          "8ryy_X54_xJj",
