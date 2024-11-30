@@ -1,40 +1,18 @@
 version: '3.8'
 
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nextjs-frontend
-    environment:
-      - NEXT_PUBLIC_API_URL=https://smidra.com
+  app:
+    build: .
     ports:
-      - "3000:3000"
-    restart: always
-    env_file:
-      - .env.production
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: go-backend
+      - "8080:8080"
     environment:
+      - PORT=8080
       - AI_PROVIDER=huggingface
       - HUGGINGFACE_API_KEY=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
       - HUGGINGFACE_MODEL_ID=Qwen/Qwen2.5-Coder-32B-Instruct
-    ports:
-      - "8080:8080"
-    restart: always
     networks:
       - app-network
+    restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
