@@ -10,6 +10,8 @@ services:
       - AI_PROVIDER=huggingface
       - HUGGINGFACE_API_KEY=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
       - HUGGINGFACE_MODEL_ID=Qwen/Qwen2.5-Coder-32B-Instruct
+    volumes:
+      - ./.env:/app/.env:ro
     networks:
       - app-network
     restart: always
