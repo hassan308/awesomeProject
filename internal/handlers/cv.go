@@ -25,6 +25,7 @@ func GenerateCV(c *gin.Context) {
 		Email         string `json:"email"`
 		Phone         string `json:"phone"`
 		Location      string `json:"location"`
+		TemplateId    string `json:"templateId"`
 	}
 
 	if err := c.BindJSON(&request); err != nil {
@@ -106,15 +107,18 @@ func GenerateCV(c *gin.Context) {
 		Certifieringar:      convertToStringSlice(aiResponse["certifieringar"]),
 	}
 
-	// Logga data för felsökning
-	log.Printf("Template data som ska renderas:\n%+v", templateData)
+	// Välj mall baserat på template-ID
+	templateFile := "cv_template.html" // Default mall
+	if request.TemplateId == "modern" {
+		templateFile = "cv-test.html"
+	}
 
 	// Rendera template med funcs map för eq helper
-	tmpl, err := template.New("cv_template.html").Funcs(template.FuncMap{
+	tmpl, err := template.New(templateFile).Funcs(template.FuncMap{
 		"eq": func(a, b interface{}) bool {
 			return fmt.Sprintf("%v", a) == fmt.Sprintf("%v", b)
 		},
-	}).ParseFiles("internal/templates/cv_template.html")
+	}).ParseFiles("internal/templates/" + templateFile)
 
 	if err != nil {
 		log.Printf("Fel vid parsing av template: %v", err)
@@ -275,4 +279,3 @@ func getStringValueFromMap(m map[string]interface{}, key, defaultValue string) s
 	}
 	return defaultValue
 }
-

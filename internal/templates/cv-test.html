@@ -1,0 +1,423 @@
+<!DOCTYPE html><html lang="sv"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CV Mall</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>@media print { .delete-btn, .print-btn, .print-hidden { display: none !important; } }</style><script>document.addEventListener('DOMContentLoaded', function() { document.querySelectorAll('.bg-custom.rounded-full.h-2').forEach(bar => { bar.style.cursor = 'pointer'; bar.addEventListener('mousedown', function(e) { const rect = this.parentElement.getBoundingClientRect(); const updateWidth = (e) => { const x = e.clientX - rect.left; let percentage = Math.round((x / rect.width) * 100); percentage = Math.max(0, Math.min(100, percentage)); this.style.width = percentage + '%'; }; const stopDrag = () => { document.removeEventListener('mousemove', updateWidth); document.removeEventListener('mouseup', stopDrag); }; document.addEventListener('mousemove', updateWidth); document.addEventListener('mouseup', stopDrag); }); }); });</script>
+<style>
+    .section-divider {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+        width: 100%;
+    }
+    
+    .profile-image-container {
+        position: relative;
+        width: 128px;
+        height: 128px;
+        overflow: hidden;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    
+    .profile-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 4px;
+        font-size: 12px;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .profile-image-container:hover .profile-image-overlay {
+        opacity: 1;
+    }
+
+    #imageUpload {
+        display: none;
+    }
+</style>
+
+<script>
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('.profile-image').src = e.target.result;
+            // Spara bilden i localStorage för att behålla den efter omladdning
+            localStorage.setItem('profileImage', e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Återställ sparad bild vid sidladdning
+document.addEventListener('DOMContentLoaded', function() {
+    const savedImage = localStorage.getItem('profileImage');
+    if (savedImage) {
+        document.querySelector('.profile-image').src = savedImage;
+    }
+});
+</script>
+<style>
+    @media print {
+        body {
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        .max-w-4xl {
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        .print-hidden, .delete-btn {
+            display: none !important;
+        }
+        
+        img {
+            print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
+        }
+        
+        .section-divider {
+            border-color: rgba(0, 0, 0, 0.1) !important;
+            margin: 1.5rem 0 !important;
+        }
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    @media (max-width: 640px) {
+        .btn-group {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+function printPDF() {
+    // Spara original overflow
+    const originalOverflow = document.body.style.overflow;
+    
+    // Dölj scrollbar under utskrift
+    document.body.style.overflow = 'hidden';
+    
+    // Dölj knappar och delete-knappar
+    const buttons = document.querySelectorAll('.print-hidden');
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    buttons.forEach(btn => btn.style.display = 'none');
+    deleteButtons.forEach(btn => btn.style.display = 'none');
+
+    // Vänta på att alla bilder ska laddas
+    Promise.all(Array.from(document.images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => img.addEventListener('load', resolve));
+    })).then(() => {
+        window.print();
+        
+        // Återställ efter utskrift
+        document.body.style.overflow = originalOverflow;
+        buttons.forEach(btn => btn.style.display = '');
+        deleteButtons.forEach(btn => btn.style.display = '');
+    });
+}
+</script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto py-6 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-8">
+        <div class="flex justify-end mb-6">
+            <button id="download-pdf" class="bg-custom text-white px-4 sm:px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2 print-hidden">
+                <i class="fas fa-file-pdf"></i> Spara som PDF
+            </button>
+        </div>
+        
+        <header class="bg-white rounded-lg shadow-sm p-8 flex items-start gap-8 relative">
+            <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)">
+            <div class="profile-image-container" onclick="document.getElementById('imageUpload').click()">
+                <img src="{{ .PersonligInfo.Bild }}" alt="Profilbild" class="profile-image">
+                <div class="profile-image-overlay">Klicka för att ändra</div>
+            </div>
+            <div class="flex-1">
+                <div contenteditable="true" class="text-3xl font-bold mb-2">{{ .PersonligInfo.Namn }}</div>
+                <div contenteditable="true" class="text-xl text-gray-600 mb-4">{{ .PersonligInfo.Titel }}</div>
+                <div class="space-y-2 relative">
+                    {{ range .PersonligInfo.Kontakt }}
+                    <div class="flex items-center gap-2 relative"><button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                        <i class="fas {{ if eq .Typ "email" }}fa-envelope{{ else if eq .Typ "telefon" }}fa-phone{{ else if eq .Typ "linkedin" }}fa-linkedin{{ else }}fa-location-dot{{ end }} text-custom"></i>
+                        <span contenteditable="true" class="relative">{{ .Varde }}</span>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </header>
+        <div class="section-divider"></div>
+
+        <section class="bg-white rounded-lg shadow-sm p-8 relative mb-8">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Profil</h2>
+            </div>
+            <div contenteditable="true" class="text-gray-600">
+                {{ if .Profil }}
+                    {{ .Profil }}
+                {{ else }}
+                    Skriv en kort sammanfattning om dig själv, dina styrkor och vad du söker...
+                {{ end }}
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-sm p-8 relative">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Arbetslivserfarenhet</h2>
+                <button onclick="addExperience()" class="add-btn text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-plus" title="Lägg till"></i>
+                </button>
+            </div>
+            <div id="experience-container">
+                {{ range .Arbetslivserfarenhet }}
+                <div class="mb-6 last:mb-0 relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                    <div contenteditable="true" class="font-semibold">{{ .Titel }}</div>
+                    <div contenteditable="true" class="text-gray-600">{{ .Foretag }}</div>
+                    <div contenteditable="true" class="text-sm text-gray-500 mb-2">{{ .Period }}</div>
+                    <div contenteditable="true" class="text-gray-600">{{ .Beskrivning }}</div>
+                </div>
+                {{ end }}
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-sm p-8 relative">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Utbildning</h2>
+                <button onclick="addEducation()" class="add-btn text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-plus" title="Lägg till"></i>
+                </button>
+            </div>
+            <div id="education-container">
+                {{ range .Utbildning }}
+                <div class="mb-6 last:mb-0 relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                    <div contenteditable="true" class="font-semibold">{{ .Examen }}</div>
+                    <div contenteditable="true" class="text-gray-600">{{ .Skola }}</div>
+                    <div contenteditable="true" class="text-sm text-gray-500 mb-2">{{ .Period }}</div>
+                    <div contenteditable="true" class="text-gray-600">{{ .Beskrivning }}</div>
+                </div>
+                {{ end }}
+            </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow-sm p-8 relative">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Färdigheter</h2>
+                <button onclick="addSkill()" class="add-btn text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-plus" title="Lägg till"></i>
+                </button>
+            </div>
+            <div id="skills-container" class="grid grid-cols-2 gap-4">
+                {{ range .Fardigheter }}
+                <div class="relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                    <div contenteditable="true" class="mb-2">{{ . }}</div>
+                    <div class="bg-gray-200 rounded-full h-2 relative">
+                        <div class="bg-custom rounded-full h-2" style="width: 90%"></div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+        </section>
+
+        <script>
+        function addExperience() {
+            const container = document.getElementById('experience-container');
+            const newExperience = document.createElement('div');
+            newExperience.className = 'mb-6 last:mb-0 relative';
+            newExperience.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                <div contenteditable="true" class="font-semibold">Jobbtitel</div>
+                <div contenteditable="true" class="text-gray-600">Företag</div>
+                <div contenteditable="true" class="text-sm text-gray-500 mb-2">Period</div>
+                <div contenteditable="true" class="text-gray-600">Beskrivning av arbetsuppgifter och prestationer</div>
+            `;
+            container.appendChild(newExperience);
+        }
+
+        function addEducation() {
+            const container = document.getElementById('education-container');
+            const newEducation = document.createElement('div');
+            newEducation.className = 'mb-6 last:mb-0 relative';
+            newEducation.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                <div contenteditable="true" class="font-semibold">Examen</div>
+                <div contenteditable="true" class="text-gray-600">Skola</div>
+                <div contenteditable="true" class="text-sm text-gray-500 mb-2">Period</div>
+                <div contenteditable="true" class="text-gray-600">Beskrivning av utbildningen</div>
+            `;
+            container.appendChild(newEducation);
+        }
+
+        function addSkill() {
+            const container = document.getElementById('skills-container');
+            const newSkill = document.createElement('div');
+            newSkill.className = 'relative';
+            newSkill.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
+                <div contenteditable="true" class="mb-2">Ny färdighet</div>
+                <div class="bg-gray-200 rounded-full h-2 relative">
+                    <div class="bg-custom rounded-full h-2" style="width: 90%"></div>
+                </div>
+            `;
+            container.appendChild(newSkill);
+        }
+        </script>
+    </div>
+
+    <script>
+    window.jsPDF = window.jspdf.jsPDF;
+    
+    document.getElementById('download-pdf').addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.textContent = 'Skapar PDF...';
+        loadingIndicator.style.position = 'fixed';
+        loadingIndicator.style.top = '50%';
+        loadingIndicator.style.left = '50%';
+        loadingIndicator.style.transform = 'translate(-50%, -50%)';
+        loadingIndicator.style.background = 'rgba(0, 0, 0, 0.8)';
+        loadingIndicator.style.color = 'white';
+        loadingIndicator.style.padding = '15px 30px';
+        loadingIndicator.style.borderRadius = '8px';
+        loadingIndicator.style.zIndex = '9999';
+        document.body.appendChild(loadingIndicator);
+
+        try {
+            // Dölj knappar och X-knappar temporärt
+            const pdfButton = document.getElementById('download-pdf');
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            pdfButton.style.display = 'none';
+            deleteButtons.forEach(btn => btn.style.display = 'none');
+
+            // Ta screenshot
+            const element = document.querySelector('.max-w-4xl');
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#f9fafb',
+                height: element.scrollHeight, // Säkerställ att hela höjden fångas
+                windowHeight: element.scrollHeight,
+                onclone: function(clonedDoc) {
+                    const container = clonedDoc.querySelector('.max-w-4xl');
+                    container.style.width = '210mm';
+                    container.style.padding = '20px';
+                    container.style.margin = '0';
+                    
+                    // Ta bort alla knappar från klonen
+                    clonedDoc.querySelectorAll('.print-hidden, .delete-btn').forEach(el => el.remove());
+                    
+                    // Justera alla sektioner för bättre utskrift
+                    clonedDoc.querySelectorAll('section').forEach(section => {
+                        section.style.pageBreakInside = 'avoid';
+                        section.style.marginBottom = '20px';
+                    });
+                }
+            });
+
+            // Konvertera till PDF med rätt dimensioner
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            // Om innehållet är längre än en sida
+            if (pdfHeight > pdf.internal.pageSize.getHeight()) {
+                let heightLeft = pdfHeight;
+                let position = 0;
+                let page = 1;
+                
+                while (heightLeft >= 0) {
+                    if (page > 1) {
+                        pdf.addPage();
+                    }
+                    
+                    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pdf.internal.pageSize.getHeight();
+                    position -= pdf.internal.pageSize.getHeight();
+                    page++;
+                }
+            } else {
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            }
+            
+            pdf.save('cv.pdf');
+
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            const errorMessage = document.createElement('div');
+            errorMessage.innerHTML = `
+                <div style="margin-bottom: 10px;">Kunde inte skapa PDF</div>
+                <div style="font-size: 14px;">Försök att uppdatera sidan och försök igen</div>
+            `;
+            errorMessage.style.position = 'fixed';
+            errorMessage.style.top = '50%';
+            errorMessage.style.left = '50%';
+            errorMessage.style.transform = 'translate(-50%, -50%)';
+            errorMessage.style.background = '#ff4444';
+            errorMessage.style.color = 'white';
+            errorMessage.style.padding = '15px 30px';
+            errorMessage.style.borderRadius = '8px';
+            errorMessage.style.zIndex = '9999';
+            errorMessage.style.textAlign = 'center';
+            document.body.appendChild(errorMessage);
+            setTimeout(() => document.body.removeChild(errorMessage), 3000);
+        } finally {
+            // Visa knapparna igen
+            const pdfButton = document.getElementById('download-pdf');
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            pdfButton.style.display = '';
+            deleteButtons.forEach(btn => btn.style.display = '');
+            document.body.removeChild(loadingIndicator);
+        }
+    });
+    </script>
+</body>
+</html>
