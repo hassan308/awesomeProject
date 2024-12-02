@@ -111,12 +111,19 @@ func GenerateCV(c *gin.Context) {
 	templateFile := "cv_template.html" // Default mall
 	if request.TemplateId == "modern" {
 		templateFile = "cv-test.html"
+	} else if request.TemplateId == "creative" {
+		templateFile = "cv-test2.html"
+	} else if request.TemplateId == "cv3" {
+		templateFile = "cv-test3.html"
 	}
 
-	// Rendera template med funcs map för eq helper
+	// Rendera template med funcs map för eq och ge helper
 	tmpl, err := template.New(templateFile).Funcs(template.FuncMap{
 		"eq": func(a, b interface{}) bool {
 			return fmt.Sprintf("%v", a) == fmt.Sprintf("%v", b)
+		},
+		"ge": func(a, b int) bool {
+			return a >= b
 		},
 	}).ParseFiles("internal/templates/" + templateFile)
 
