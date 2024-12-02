@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="sv"><head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=1024, initial-scale=1.0"/>
     <title>CV Mall</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
@@ -128,259 +128,59 @@
         transform: scale(0.98);
     }
 </style>
+<style>
+    @media screen and (max-width: 1024px) {
+        body {
+            min-width: 1024px;
+            overflow-x: auto;
+            zoom: 1;
+            -webkit-text-size-adjust: 100%;
+        }
+        .container {
+            width: 1024px !important;
+            max-width: none !important;
+            margin: 0 auto;
+            transform-origin: top left;
+        }
+    }
+</style>
 <style>@media print { .delete-btn, .print-btn, .print-hidden { display: none !important; } }</style><script>
             async function generateScreenshot() {
                 const buttons = document.querySelectorAll('.print-hidden');
-                const deleteButtons = document.querySelectorAll('.delete-btn');
-                const addButtons = document.querySelectorAll('.add-btn');
-                buttons.forEach(btn => btn.style.display = 'none');
-                deleteButtons.forEach(btn => btn.style.display = 'none');
-                addButtons.forEach(btn => btn.style.display = 'none');
+                buttons.forEach(button => button.style.display = 'none');
 
                 try {
                     const element = document.querySelector('.max-w-5xl');
                     const canvas = await html2canvas(element, {
                         scale: 2,
                         useCORS: true,
+                        logging: true,
                         allowTaint: true,
-                        backgroundColor: '#ffffff',
-                        height: element.scrollHeight,
-                        windowHeight: element.scrollHeight,
-                        onclone: function(clonedDoc) {
-                            const container = clonedDoc.querySelector('.max-w-5xl');
-                            container.style.padding = '20px';
-                            container.style.margin = '0';
-                            clonedDoc.querySelectorAll('.print-hidden, .delete-btn, .add-btn').forEach(el => el.remove());
-                        }
+                        foreignObjectRendering: true
                     });
 
-                    return canvas;
+                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save('cv.pdf');
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
                 } finally {
-                    buttons.forEach(btn => btn.style.display = '');
-                    deleteButtons.forEach(btn => btn.style.display = '');
-                    addButtons.forEach(btn => btn.style.display = '');
+                    buttons.forEach(button => button.style.display = '');
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
-                const downloadImagePdfButton = document.getElementById('download-image-pdf');
-                if (downloadImagePdfButton) {
-                    downloadImagePdfButton.addEventListener('click', async function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        const loadingIndicator = document.createElement('div');
-                        loadingIndicator.innerHTML = `
-                            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998;"></div>
-                            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; z-index: 9999; text-align: center;">
-                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                                <div>Konverterar till PDF...</div>
-                            </div>
-                        `;
-                        document.body.appendChild(loadingIndicator);
-
-                        try {
-                            const canvas = await generateScreenshot();
-                            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                            
-                            const { jsPDF } = window.jspdf;
-                            const pdf = new jsPDF({
-                                orientation: 'portrait',
-                                unit: 'mm',
-                                format: 'a4'
-                            });
-
-                            const imgProps = pdf.getImageProperties(imgData);
-                            const pdfWidth = pdf.internal.pageSize.getWidth();
-                            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                            
-                            if (pdfHeight > pdf.internal.pageSize.getHeight()) {
-                                let heightLeft = pdfHeight;
-                                let position = 0;
-                                let page = 1;
-                                
-                                while (heightLeft >= 0) {
-                                    if (page > 1) {
-                                        pdf.addPage();
-                                    }
-                                    
-                                    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-                                    heightLeft -= pdf.internal.pageSize.getHeight();
-                                    position -= pdf.internal.pageSize.getHeight();
-                                    page++;
-                                }
-                            } else {
-                                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                            }
-                            
-                            pdf.save('cv-from-image.pdf');
-
-                        } catch (error) {
-                            console.error('PDF generation failed:', error);
-                            const errorMessage = document.createElement('div');
-                            errorMessage.innerHTML = `
-                                <div style="margin-bottom: 10px;">Kunde inte skapa PDF</div>
-                                <div style="font-size: 14px;">Försök att uppdatera sidan och försök igen</div>
-                            `;
-                            errorMessage.style.position = 'fixed';
-                            errorMessage.style.top = '50%';
-                            errorMessage.style.left = '50%';
-                            errorMessage.style.transform = 'translate(-50%, -50%)';
-                            errorMessage.style.background = '#ff4444';
-                            errorMessage.style.color = 'white';
-                            errorMessage.style.padding = '15px 30px';
-                            errorMessage.style.borderRadius = '8px';
-                            errorMessage.style.zIndex = '9999';
-                            errorMessage.style.textAlign = 'center';
-                            document.body.appendChild(errorMessage);
-                            setTimeout(() => document.body.removeChild(errorMessage), 3000);
-                        } finally {
-                            document.body.removeChild(loadingIndicator);
-                        }
-                    });
-                }
-            });
-
-            function addExperience() {
-                const container = document.getElementById('experience-container');
-                const newExperience = document.createElement('div');
-                newExperience.className = 'relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300';
-                newExperience.innerHTML = `
-                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                    <div contenteditable="true" class="font-semibold text-gray-900">Ny position</div>
-                    <div contenteditable="true" class="text-sm text-gray-500">Period</div>
-                    <div contenteditable="true" class="mt-2 text-gray-600">Beskrivning av arbetet</div>
-                `;
-                container.appendChild(newExperience);
-            }
-
-            function addEducation() {
-                const container = document.getElementById('education-container');
-                const newEducation = document.createElement('div');
-                newEducation.className = 'relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300';
-                newEducation.innerHTML = `
-                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                    <div contenteditable="true" class="font-semibold text-gray-900">Ny utbildning</div>
-                    <div contenteditable="true" class="text-sm text-gray-500">Period</div>
-                    <div contenteditable="true" class="mt-2 text-gray-600">Beskrivning av utbildningen</div>
-                `;
-                container.appendChild(newEducation);
-            }
-
-            function addSkill() {
-                const container = document.getElementById('skills-container');
-                const newSkill = document.createElement('div');
-                newSkill.className = 'relative group';
-                newSkill.innerHTML = `
-                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                    <div contenteditable="true" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200">Ny färdighet</div>
-                `;
-                container.appendChild(newSkill);
-            }
-
-            function addLanguage() {
-                const container = document.getElementById('languages-container');
-                const newLanguage = document.createElement('div');
-                newLanguage.className = 'relative';
-                newLanguage.innerHTML = `
-                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                    <div class="flex justify-between items-center">
-                        <div contenteditable="true" class="font-semibold">Nytt språk</div>
-                        <div class="flex gap-1 cursor-pointer" onclick="handleLanguageLevelClick(event)">
-                            <i class="far fa-circle text-custom"></i>
-                            <i class="far fa-circle text-custom"></i>
-                            <i class="far fa-circle text-custom"></i>
-                            <i class="far fa-circle text-custom"></i>
-                            <i class="far fa-circle text-custom"></i>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(newLanguage);
-            }
-
-            function handleLanguageLevelClick(event) {
-                if (!event.target.classList.contains('fa-circle')) return;
-                
-                const container = event.target.closest('.flex.gap-1');
-                const dots = container.querySelectorAll('.fa-circle');
-                const clickedIndex = Array.from(dots).indexOf(event.target);
-                
-                dots.forEach((dot, index) => {
-                    if (index <= clickedIndex) {
-                        dot.classList.remove('far');
-                        dot.classList.add('fas');
-                    } else {
-                        dot.classList.remove('fas');
-                        dot.classList.add('far');
-                    }
-                });
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const languages = document.querySelectorAll('#languages-container .relative');
-                languages.forEach(lang => {
-                    const level = lang.getAttribute('data-level') || 3;
-                    const dots = lang.querySelectorAll('.fa-circle');
-                    dots.forEach((dot, index) => {
-                        if (index < level) {
-                            dot.classList.replace('far', 'fas');
-                        }
-                    });
-                });
-
-                const languageContainer = document.getElementById('languages-container');
-                
-                // Hantera existerande språknivåer
-                languageContainer.querySelectorAll('.flex.gap-1').forEach(container => {
-                    container.style.cursor = 'pointer';
-                    container.addEventListener('click', handleLanguageLevelClick);
-                });
-
-                // Hantera dynamiskt tillagda språk
-                const observer = new MutationObserver(mutations => {
-                    mutations.forEach(mutation => {
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeType === 1) { // Element node
-                                const container = node.querySelector('.flex.gap-1');
-                                if (container) {
-                                    container.style.cursor = 'pointer';
-                                    container.addEventListener('click', handleLanguageLevelClick);
-                                }
-                            }
-                        });
-                    });
-                });
-
-                observer.observe(languageContainer, { childList: true, subtree: true });
-            });
-
-            function handleImageUpload(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const profileImage = document.querySelector('.profile-image');
-                        profileImage.src = e.target.result;
-                        // Store image in localStorage
-                        localStorage.setItem('profileImage', e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const savedImage = localStorage.getItem('profileImage');
-                if (savedImage) {
-                    const profileImage = document.querySelector('.profile-image');
-                    profileImage.src = savedImage;
-                }
-            });
+            document.getElementById('download-pdf').addEventListener('click', generateScreenshot);
 </script></head>
 <body class="bg-white min-h-screen">
     <div class="max-w-5xl mx-auto py-8 sm:py-16 px-6 sm:px-8 lg:px-12">
         <div class="flex justify-end gap-4 mb-6 flex-wrap">
-            <button class="bg-custom text-white px-4 sm:px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2 print-hidden w-full sm:w-auto justify-center" id="download-image-pdf">
-                <i class="fas fa-file-image"></i> Bild till PDF
+            <button id="download-pdf" class="print-hidden bg-custom hover:bg-custom/90 text-white px-4 py-2 rounded-lg shadow transition-all duration-200 hover:shadow-lg active:scale-95">
+                <i class="fas fa-file-pdf mr-2"></i>Spara som PDF
             </button>
         </div>
         

@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="sv"><head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=1024, initial-scale=1.0"/>
     <title>CV Mall</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
@@ -9,7 +9,24 @@
     <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-<style>@media print { .delete-btn, .print-btn, .print-hidden { display: none !important; } }</style><script>document.addEventListener('DOMContentLoaded', function() { document.querySelectorAll('.bg-custom.rounded-full.h-2').forEach(bar => { bar.style.cursor = 'pointer'; bar.addEventListener('mousedown', function(e) { const rect = this.parentElement.getBoundingClientRect(); const updateWidth = (e) => { const x = e.clientX - rect.left; let percentage = Math.round((x / rect.width) * 100); percentage = Math.max(0, Math.min(100, percentage)); this.style.width = percentage + '%'; }; const stopDrag = () => { document.removeEventListener('mousemove', updateWidth); document.removeEventListener('mouseup', stopDrag); }; document.addEventListener('mousemove', updateWidth); document.addEventListener('mouseup', stopDrag); }); }); const downloadBtn = document.querySelector('#download-pdf'); if(downloadBtn) { downloadBtn.addEventListener('click', function(e) { e.preventDefault(); const element = document.querySelector('.max-w-4xl'); const opt = { margin: [10, 10, 10, 10], filename: 'cv.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: true, allowTaint: true, foreignObjectRendering: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().catch(err => console.error('PDF generation failed:', err)); }); } });</script></head>
+<style>@media print { .delete-btn, .print-btn, .print-hidden { display: none !important; } }</style>
+<style>
+@media screen and (max-width: 1024px) {
+    body {
+        min-width: 1024px;
+        overflow-x: auto;
+        zoom: 1;
+        -webkit-text-size-adjust: 100%;
+    }
+    .container {
+        width: 1024px !important;
+        max-width: none !important;
+        margin: 0 auto;
+        transform-origin: top left;
+    }
+}
+</style>
+<script>document.addEventListener('DOMContentLoaded', function() { document.querySelectorAll('.bg-custom.rounded-full.h-2').forEach(bar => { bar.style.cursor = 'pointer'; bar.addEventListener('mousedown', function(e) { const rect = this.parentElement.getBoundingClientRect(); const updateWidth = (e) => { const x = e.clientX - rect.left; let percentage = Math.round((x / rect.width) * 100); percentage = Math.max(0, Math.min(100, percentage)); this.style.width = percentage + '%'; }; const stopDrag = () => { document.removeEventListener('mousemove', updateWidth); document.removeEventListener('mouseup', stopDrag); }; document.addEventListener('mousemove', updateWidth); document.addEventListener('mouseup', stopDrag); }); }); const downloadBtn = document.querySelector('#download-pdf'); if(downloadBtn) { downloadBtn.addEventListener('click', function(e) { e.preventDefault(); const element = document.querySelector('.max-w-4xl'); const opt = { margin: [10, 10, 10, 10], filename: 'cv.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, logging: true, allowTaint: true, foreignObjectRendering: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().catch(err => console.error('PDF generation failed:', err)); }); } });</script></head>
 <body class="bg-gray-50 min-h-screen">
     <div class="max-w-5xl mx-auto py-6 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-6">
         
@@ -118,98 +135,40 @@
             </div>
         </footer>
     </div>
-    <button id="download-image-pdf" class="print-hidden">Ladda ner som PDF</button>
+    <button id="download-pdf" class="print-hidden bg-custom hover:bg-custom/90 text-white px-4 py-2 rounded-lg shadow transition-all duration-200 hover:shadow-lg active:scale-95">
+        <i class="fas fa-file-pdf mr-2"></i>Spara som PDF
+    </button>
     <script>
-        // PDF Export
-        document.getElementById('download-image-pdf').addEventListener('click', async function() {
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998;"></div>
-                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; z-index: 9999; text-align: center;">
-                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-                    <div>Konverterar till PDF...</div>
-                </div>
-            `;
-            document.body.appendChild(loadingIndicator);
+        async function generateScreenshot() {
+            const buttons = document.querySelectorAll('.print-hidden');
+            buttons.forEach(button => button.style.display = 'none');
 
             try {
-                const buttons = document.querySelectorAll('.print-hidden');
-                const deleteButtons = document.querySelectorAll('[onclick*="remove"]');
-                const addButtons = document.querySelectorAll('.add-btn');
-                
-                buttons.forEach(btn => btn.style.display = 'none');
-                deleteButtons.forEach(btn => btn.style.display = 'none');
-                addButtons.forEach(btn => btn.style.display = 'none');
-
                 const element = document.querySelector('.max-w-5xl');
                 const canvas = await html2canvas(element, {
                     scale: 2,
                     useCORS: true,
+                    logging: true,
                     allowTaint: true,
-                    backgroundColor: '#ffffff'
+                    foreignObjectRendering: true
                 });
 
                 const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-
+                const pdf = new jsPDF('p', 'mm', 'a4');
                 const imgProps = pdf.getImageProperties(imgData);
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
                 
-                if (pdfHeight > pdf.internal.pageSize.getHeight()) {
-                    let heightLeft = pdfHeight;
-                    let position = 0;
-                    let page = 1;
-                    
-                    while (heightLeft >= 0) {
-                        if (page > 1) {
-                            pdf.addPage();
-                        }
-                        
-                        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-                        heightLeft -= pdf.internal.pageSize.getHeight();
-                        position -= pdf.internal.pageSize.getHeight();
-                        page++;
-                    }
-                } else {
-                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                }
-                
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save('cv.pdf');
-
-                buttons.forEach(btn => btn.style.display = '');
-                deleteButtons.forEach(btn => btn.style.display = '');
-                addButtons.forEach(btn => btn.style.display = '');
-
             } catch (error) {
-                console.error('PDF generation failed:', error);
-                const errorMessage = document.createElement('div');
-                errorMessage.innerHTML = `
-                    <div style="margin-bottom: 10px;">Kunde inte skapa PDF</div>
-                    <div style="font-size: 14px;">Försök att uppdatera sidan och försök igen</div>
-                `;
-                errorMessage.style.position = 'fixed';
-                errorMessage.style.top = '50%';
-                errorMessage.style.left = '50%';
-                errorMessage.style.transform = 'translate(-50%, -50%)';
-                errorMessage.style.background = '#ff4444';
-                errorMessage.style.color = 'white';
-                errorMessage.style.padding = '15px 30px';
-                errorMessage.style.borderRadius = '8px';
-                errorMessage.style.zIndex = '9999';
-                errorMessage.style.textAlign = 'center';
-                document.body.appendChild(errorMessage);
-                setTimeout(() => document.body.removeChild(errorMessage), 3000);
+                console.error('Error generating PDF:', error);
             } finally {
-                document.body.removeChild(loadingIndicator);
+                buttons.forEach(button => button.style.display = '');
             }
-        });
+        }
+
+        document.getElementById('download-pdf').addEventListener('click', generateScreenshot);
     </script>
 </body>
 </html>
