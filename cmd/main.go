@@ -3,6 +3,7 @@ package main
 
 import (
 	"awesomeProject/internal/handlers"
+	"awesomeProject/internal/routes"
 	"awesomeProject/internal/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -137,11 +138,8 @@ func main() {
 	router.GET("/health", handlers.HealthCheck)
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// API endpoints
-	router.POST("/search", handlers.SearchJobs)
-	router.POST("/generate_cv", handlers.GenerateCV)
-	router.POST("/analyze-search", handlers.AnalyzeSearchQuery)
-	router.POST("/recommended-jobs", handlers.GetRecommendedJobs)
+	// Sätt upp alla routes från routes.go
+	routes.SetupRoutes(router)
 
 	// Starta servern
 	port := os.Getenv("PORT")

@@ -1,312 +1,439 @@
-<!DOCTYPE html><html lang="sv"><head>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=1024, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>CV Mall</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#9333EA" data-border-radius="small"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="https://unpkg.com/docx@8.2.3/build/index.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#AC1BF5" data-border-radius="small"></script>
-<style>
-    .profile-image-container {
-        position: relative;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-    .profile-image-container:hover {
-        transform: scale(1.02);
-    }
-
-    .profile-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .profile-image-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        opacity: 0;
-        transition: opacity 0.3s;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.9rem;
-    }
-
-    .profile-image-container:hover .profile-image-overlay {
-        opacity: 1;
-    }
-
-    #imageUpload {
-        display: none;
-    }
-
-    .delete-btn {
-        display: none;
-        z-index: 10;
-        background: white;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-
-    .group:hover .delete-btn,
-    *:hover > .delete-btn {
-        display: flex;
-    }
-
-    .delete-btn:hover {
-        transform: scale(1.1);
-        background: #f3f4f6;
-    }
-
-    @media print {
-        .print-hidden,
-        .delete-btn,
-        .profile-image-overlay {
-            display: none !important;
-        }
-    }
-
-    #download-pdf {
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    #download-pdf:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    #download-pdf:active {
-        transform: translateY(0);
-    }
-
-    @media (max-width: 768px) {
-        #download-pdf {
-            top: auto;
-            bottom: 4px;
-            right: 4px;
-            font-size: 0.8rem;
-            padding: 0.5rem 1rem;
-        }
-    }
-
-    /* Förbättrade hover-effekter för knappar */
-    .delete-btn,
-    #download-pdf,
-    .profile-image-container {
-        transition: all 0.2s ease;
-    }
-
-    .delete-btn:hover,
-    #download-pdf:hover {
-        transform: scale(1.05);
-    }
-
-    .delete-btn:active,
-    #download-pdf:active {
-        transform: scale(0.98);
-    }
-</style>
-<style>
-    @media screen and (max-width: 1024px) {
-        body {
-            min-width: 1024px;
-            overflow-x: auto;
-            zoom: 1;
-            -webkit-text-size-adjust: 100%;
-        }
-        .container {
-            width: 1024px !important;
-            max-width: none !important;
-            margin: 0 auto;
-            transform-origin: top left;
-        }
-    }
-</style>
-<style>@media print { .delete-btn, .print-btn, .print-hidden { display: none !important; } }</style><script>
-            async function generateScreenshot() {
-                const buttons = document.querySelectorAll('.print-hidden');
-                buttons.forEach(button => button.style.display = 'none');
-
-                try {
-                    const element = document.querySelector('.max-w-5xl');
-                    const canvas = await html2canvas(element, {
-                        scale: 2,
-                        useCORS: true,
-                        logging: true,
-                        allowTaint: true,
-                        foreignObjectRendering: true
-                    });
-
-                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                    const pdf = new jsPDF('p', 'mm', 'a4');
-                    const imgProps = pdf.getImageProperties(imgData);
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    
-                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                    pdf.save('cv.pdf');
-                } catch (error) {
-                    console.error('Error generating PDF:', error);
-                } finally {
-                    buttons.forEach(button => button.style.display = '');
-                }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <style>
+        @media print {
+            .delete-btn, .print-btn, .print-hidden {
+                display: none !important;
             }
+        }
 
-            document.getElementById('download-pdf').addEventListener('click', generateScreenshot);
-</script></head>
+        @media screen and (max-width: 1024px) {
+            body {
+                min-width: 1024px;
+                overflow-x: auto;
+                zoom: 1;
+                -webkit-text-size-adjust: 100%;
+            }
+            .container {
+                width: 1024px !important;
+                max-width: none !important;
+                margin: 0 auto;
+                transform-origin: top left;
+            }
+        }
+    </style>
+</head>
 <body class="bg-white min-h-screen">
     <div class="max-w-5xl mx-auto py-8 sm:py-16 px-6 sm:px-8 lg:px-12">
         <div class="flex justify-end gap-4 mb-6 flex-wrap">
-            <button id="download-pdf" class="print-hidden bg-custom hover:bg-custom/90 text-white px-4 py-2 rounded-lg shadow transition-all duration-200 hover:shadow-lg active:scale-95">
-                <i class="fas fa-file-pdf mr-2"></i>Spara som PDF
+            <button class="bg-custom text-white px-4 sm:px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2 print-hidden w-full sm:w-auto justify-center" id="download-pdf">
+                <i class="fas fa-download"></i> Ladda ner som PDF
             </button>
         </div>
         
-        <div class="max-w-4xl mx-auto py-6 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-8">
-            <header class="bg-gray-50 rounded-3xl shadow-2xl p-12 flex flex-col md:flex-row items-center md:items-start gap-10 relative border-l-8 border-custom">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-                
-                <div class="relative w-48 h-48 ring-8 ring-custom/10 rounded-full overflow-hidden shadow-2xl profile-image-container">
-                    <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                    <img id="profileImage" src="/cv-templates/cvman.png" alt="Profile Image" class="w-full h-full object-cover rounded-full" onerror="this.src='/cv-templates/cvman.png';">
-                    <div class="profile-image-overlay">Klicka för att ändra</div>
+        <header class="bg-gray-50 rounded-3xl shadow-2xl p-12 flex flex-col md:flex-row items-center md:items-start gap-10 relative border-l-8 border-custom">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="relative w-48 h-48 ring-8 ring-custom/10 rounded-full overflow-hidden shadow-2xl">
+                <img src="{{ if .PersonligInfo.Bild }}{{ .PersonligInfo.Bild }}{{ else }}/static/images/default-profile.png{{ end }}" alt="Profilbild" class="rounded-full object-cover w-full h-full" id="profileImage"/>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;"/>
+            </div>
+            <div class="flex-1">
+                <div contenteditable="true" class="text-4xl font-bold mb-3 text-gray-900">{{ if .PersonligInfo.Namn }}{{ .PersonligInfo.Namn }}{{ else }}Anna Andersson{{ end }}</div>
+                <div contenteditable="true" class="text-xl text-custom font-medium mb-4">{{ if .PersonligInfo.Titel }}{{ .PersonligInfo.Titel }}{{ else }}Senior UX Designer{{ end }}</div>
+                <div class="space-y-2 relative">
+                    {{ range .PersonligInfo.Kontakt }}
+                    <div class="flex items-center gap-2 relative text-gray-600">
+                        <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times" title="Ta bort"></i>
+                        </button>
+                        <i class="fas {{ if eq .Typ "email" }}fa-envelope{{ else if eq .Typ "telefon" }}fa-phone{{ else if eq .Typ "linkedin" }}fa-linkedin{{ else if eq .Typ "github" }}fa-github{{ else if eq .Typ "portfolio" }}fa-globe{{ else }}fa-location-dot{{ end }} text-custom"></i>
+                        <span contenteditable="true" class="relative">{{ .Varde }}</span>
+                    </div>
+                    {{ end }}
                 </div>
+                <button class="mt-4 text-custom hover:underline print-hidden" onclick="addContact()">
+                    <i class="fas fa-plus mr-2"></i>Lägg till kontaktuppgift
+                </button>
+            </div>
+        </header>
 
-                <div class="flex-1">
-                    <div contenteditable="true" class="text-4xl font-bold mb-3 text-gray-900">{{.PersonligInfo.Namn}}</div>
-                    <div contenteditable="true" class="text-xl text-custom font-medium mb-4">{{.PersonligInfo.Titel}}</div>
-                    <div contenteditable="true" class="text-gray-600 mt-4">{{.Profil}}</div>
-                    <div class="space-y-2 relative">
-                        {{ range .PersonligInfo.Kontakt }}
-                        <div class="flex items-center gap-2 relative text-gray-600">
-                            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
-                                <i class="fas fa-times" title="Ta bort"></i>
-                            </button>
-                            <i class="fas {{ if eq .Typ "email" }}fa-envelope{{ else if eq .Typ "telefon" }}fa-phone{{ else if eq .Typ "linkedin" }}fa-linkedin{{ else }}fa-location-dot{{ end }} text-custom"></i>
-                            <span contenteditable="true" class="relative">{{.Varde}}</span>
-                        </div>
+        <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-4 text-gray-900">Professionell Sammanfattning</h2>
+            <div contenteditable="true" class="text-gray-600 leading-relaxed">
+                {{ if .Profil }}{{ .Profil }}{{ else }}Erfaren UX-designer med över 8 års erfarenhet av att skapa användarvänliga digitala lösningar. Specialiserad på användarcentrerad design och agila arbetssätt. Stark förmåga att översätta komplexa problem till intuitiva designlösningar.{{ end }}
+            </div>
+        </section>
+
+        <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-6 text-gray-900">Arbetslivserfarenhet</h2>
+            <div class="space-y-6" id="experience-container">
+                {{ range .Arbetslivserfarenhet }}
+                <div class="relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times" title="Ta bort"></i>
+                    </button>
+                    <div contenteditable="true" class="font-semibold text-gray-900">{{ .Titel }} - {{ .Foretag }}</div>
+                    <div contenteditable="true" class="text-sm text-gray-500">{{ .Period }}</div>
+                    <div contenteditable="true" class="mt-2 text-gray-600">
+                        {{ range .Beskrivning }}
+                        • {{ . }}<br/>
                         {{ end }}
                     </div>
                 </div>
-            </header>
-            <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6"><button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <h2 class="text-xl font-semibold mb-4 text-gray-900">Professionell Sammanfattning</h2>
-                <div contenteditable="true" class="text-gray-600 leading-relaxed">
-                    Erfaren UX-designer med över 8 års erfarenhet av att skapa användarvänliga digitala lösningar. Specialiserad på användarcentrerad design och agila arbetssätt. Stark förmåga att översätta komplexa problem till intuitiva designlösningar.
-                </div>
-            </section>
-            <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Erfarenhet</h2>
-                    <button onclick="addExperience()" class="add-btn text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-plus" title="Lägg till"></i>
-                    </button>
-                </div>
-                <div id="experience-container">
-                    {{range .Arbetslivserfarenhet}}
-                    <div class="relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300">
-                        <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                        <div contenteditable="true" class="font-semibold text-gray-900">{{.Titel}}</div>
-                        <div contenteditable="true" class="text-sm text-gray-500">{{.Period}}</div>
-                        <div contenteditable="true" class="mt-2 text-gray-600">{{.Beskrivning}}</div>
-                    </div>
-                    {{end}}
-                </div>
-            </section>
-            <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Utbildning</h2>
-                    <button onclick="addEducation()" class="add-btn text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-plus" title="Lägg till"></i>
-                    </button>
-                </div>
-                <div id="education-container">
-                    {{range .Utbildning}}
-                    <div class="relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300">
-                        <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                        <div contenteditable="true" class="font-semibold text-gray-900">{{.Examen}}</div>
-                        <div contenteditable="true" class="text-sm text-gray-500">{{.Period}}</div>
-                        <div contenteditable="true" class="mt-2 text-gray-600">{{.Beskrivning}}</div>
-                    </div>
-                    {{end}}
-                </div>
-            </section>
-            <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Färdigheter</h2>
-                    <button onclick="addSkill()" class="add-btn text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-plus" title="Lägg till"></i>
-                    </button>
-                </div>
-                <div id="skills-container" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {{range .Fardigheter}}
-                    <div class="relative group">
-                        <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                        <div contenteditable="true" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200">{{.}}</div>
-                    </div>
-                    {{end}}
-                </div>
-            </section>
-            <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Språk</h2>
-                    <button onclick="addLanguage()" class="add-btn text-gray-600 hover:text-gray-800">
-                        <i class="fas fa-plus" title="Lägg till"></i>
-                    </button>
-                </div>
-                <div id="languages-container" class="space-y-4">
-                    {{range .Sprak}}
-                    <div class="flex items-center justify-between relative">
-                        <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                        <span contenteditable="true" class="text-gray-900">{{.Sprak}}</span>
-                        <div class="flex gap-1 cursor-pointer" onclick="handleLanguageLevelClick(event)">
-                            {{if eq .Niva "5"}}<i class="fas fa-circle text-custom"></i>{{else}}<i class="far fa-circle text-custom"></i>{{end}}
-                            {{if or (eq .Niva "4") (eq .Niva "5")}}<i class="fas fa-circle text-custom"></i>{{else}}<i class="far fa-circle text-custom"></i>{{end}}
-                            {{if or (eq .Niva "3") (eq .Niva "4") (eq .Niva "5")}}<i class="fas fa-circle text-custom"></i>{{else}}<i class="far fa-circle text-custom"></i>{{end}}
-                            {{if or (eq .Niva "2") (eq .Niva "3") (eq .Niva "4") (eq .Niva "5")}}<i class="fas fa-circle text-custom"></i>{{else}}<i class="far fa-circle text-custom"></i>{{end}}
-                            {{if or (eq .Niva "1") (eq .Niva "2") (eq .Niva "3") (eq .Niva "4") (eq .Niva "5")}}<i class="fas fa-circle text-custom"></i>{{else}}<i class="far fa-circle text-custom"></i>{{end}}
-                        </div>
-                    </div>
-                    {{end}}
-                </div>
-            </section>
-            <footer class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
-                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()"><i class="fas fa-times" title="Ta bort"></i></button>
-                <h2 class="text-xl font-semibold mb-4 text-gray-900">Referenser</h2>
-                <div contenteditable="true" class="text-gray-600">
-                    Referenser lämnas på begäran
-                </div>
-            </footer>
-        </div>
+                {{ end }}
+            </div>
+            <button class="mt-4 text-custom hover:underline print-hidden" onclick="addExperience()">
+                <i class="fas fa-plus mr-2"></i>Lägg till erfarenhet
+            </button>
+        </section>
 
+        <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-6 text-gray-900">Utbildning</h2>
+            <div class="space-y-4" id="education-container">
+                {{ range .Utbildning }}
+                <div class="relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times" title="Ta bort"></i>
+                    </button>
+                    <div contenteditable="true" class="font-semibold text-gray-900">{{ .Examen }}</div>
+                    <div contenteditable="true" class="text-sm text-gray-500">{{ .Skola }}, {{ .Period }}</div>
+                </div>
+                {{ end }}
+            </div>
+            <button class="mt-4 text-custom hover:underline print-hidden" onclick="addEducation()">
+                <i class="fas fa-plus mr-2"></i>Lägg till utbildning
+            </button>
+        </section>
+
+        <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-6 text-gray-900">Kompetenser</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative" id="skills-container">
+                {{ range .Fardigheter }}
+                <div class="relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times" title="Ta bort"></i>
+                    </button>
+                    <div contenteditable="true" class="mb-2 text-gray-900">{{ . }}</div>
+                    <div class="bg-gray-200 rounded-full h-2">
+                        <div class="bg-custom rounded-full h-2 cursor-pointer" style="width: 80%"></div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+            <button class="mt-4 text-custom hover:underline print-hidden" onclick="addSkill()">
+                <i class="fas fa-plus mr-2"></i>Lägg till kompetens
+            </button>
+        </section>
+
+        <section class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-6 text-gray-900">Språkkunskaper</h2>
+            <div class="space-y-4" id="languages-container">
+                {{ range .Sprak }}
+                <div class="flex items-center justify-between relative">
+                    <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times" title="Ta bort"></i>
+                    </button>
+                    <span contenteditable="true" class="text-gray-900">{{ .Sprak }}</span>
+                    <div class="flex gap-1" onclick="updateLanguageLevel(this)">
+                        <i class="fas fa-circle text-custom"></i>
+                        <i class="fas fa-circle text-custom"></i>
+                        <i class="fas fa-circle text-custom"></i>
+                        <i class="fas fa-circle text-custom"></i>
+                        <i class="fas fa-circle text-custom"></i>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+            <button class="mt-4 text-custom hover:underline print-hidden" onclick="addLanguage()">
+                <i class="fas fa-plus mr-2"></i>Lägg till språk
+            </button>
+        </section>
+
+        <footer class="bg-gray-50 rounded-3xl shadow-xl p-10 relative hover:shadow-2xl transition-all duration-300 border-t-4 border-custom mt-6">
+            <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                <i class="fas fa-times" title="Ta bort"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-4 text-gray-900">Referenser</h2>
+            <div contenteditable="true" class="text-gray-600">
+                Referenser lämnas på begäran
+            </div>
+        </footer>
     </div>
+
+    <script>
+        window.jsPDF = window.jspdf.jsPDF;
+
+        function updateLanguageLevel(container) {
+            const circles = container.children;
+            for (let i = 0; i < circles.length; i++) {
+                circles[i].addEventListener('click', function() {
+                    for (let j = 0; j <= i; j++) {
+                        circles[j].className = 'fas fa-circle text-custom';
+                    }
+                    for (let j = i + 1; j < circles.length; j++) {
+                        circles[j].className = 'far fa-circle text-custom';
+                    }
+                });
+            }
+        }
+
+        function addContact() {
+            const container = document.querySelector('.space-y-2');
+            const newContact = document.createElement('div');
+            newContact.className = 'flex items-center gap-2 relative text-gray-600';
+            newContact.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times" title="Ta bort"></i>
+                </button>
+                <i class="fas fa-envelope text-custom"></i>
+                <span contenteditable="true" class="relative">Ny kontaktuppgift</span>
+            `;
+            container.appendChild(newContact);
+        }
+
+        function addExperience() {
+            const container = document.getElementById('experience-container');
+            const newExperience = document.createElement('div');
+            newExperience.className = 'relative pl-8 border-l-4 border-custom group hover:bg-gray-100 p-6 rounded-xl transition-colors duration-300';
+            newExperience.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times" title="Ta bort"></i>
+                </button>
+                <div contenteditable="true" class="font-semibold text-gray-900">Ny position</div>
+                <div contenteditable="true" class="text-sm text-gray-500">Period</div>
+                <div contenteditable="true" class="mt-2 text-gray-600">Beskrivning av arbetsuppgifter</div>
+            `;
+            container.appendChild(newExperience);
+        }
+
+        function addEducation() {
+            const container = document.getElementById('education-container');
+            const newEducation = document.createElement('div');
+            newEducation.className = 'relative';
+            newEducation.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times" title="Ta bort"></i>
+                </button>
+                <div contenteditable="true" class="font-semibold text-gray-900">Utbildningsprogram</div>
+                <div contenteditable="true" class="text-sm text-gray-500">Skola, Period</div>
+            `;
+            container.appendChild(newEducation);
+        }
+
+        function addSkill() {
+            const container = document.getElementById('skills-container');
+            const newSkill = document.createElement('div');
+            newSkill.className = 'relative';
+            newSkill.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times" title="Ta bort"></i>
+                </button>
+                <div contenteditable="true" class="mb-2 text-gray-900">Ny kompetens</div>
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div class="bg-custom rounded-full h-2 cursor-pointer" style="width: 50%"></div>
+                </div>
+            `;
+            container.appendChild(newSkill);
+        }
+
+        function addLanguage() {
+            const container = document.getElementById('languages-container');
+            const newLanguage = document.createElement('div');
+            newLanguage.className = 'flex items-center justify-between relative';
+            newLanguage.innerHTML = `
+                <button class="delete-btn absolute -right-2 -top-2 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times" title="Ta bort"></i>
+                </button>
+                <span contenteditable="true" class="text-gray-900">Nytt språk</span>
+                <div class="flex gap-1" onclick="updateLanguageLevel(this)">
+                    <i class="fas fa-circle text-custom"></i>
+                    <i class="fas fa-circle text-custom"></i>
+                    <i class="fas fa-circle text-custom"></i>
+                    <i class="fas fa-circle text-custom"></i>
+                    <i class="fas fa-circle text-custom"></i>
+                </div>
+            `;
+            container.appendChild(newLanguage);
+        }
+
+        // Hantera profilbildsuppladdning
+        const imageUpload = document.getElementById('imageUpload');
+        const profileImage = document.getElementById('profileImage');
+        const profileContainer = document.querySelector('.w-48');
+
+        if (profileContainer) {
+            profileContainer.addEventListener('click', () => {
+                imageUpload.click();
+            });
+        }
+
+        if (imageUpload) {
+            imageUpload.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profileImage.src = e.target.result;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+        }
+
+        // Hantera kompetens-nivåer
+        document.querySelectorAll('.bg-custom.rounded-full.h-2').forEach(bar => {
+            bar.style.cursor = 'pointer';
+            bar.addEventListener('mousedown', function(e) {
+                const rect = this.parentElement.getBoundingClientRect();
+                const updateWidth = (e) => {
+                    const x = e.clientX - rect.left;
+                    let percentage = Math.round((x / rect.width) * 100);
+                    percentage = Math.max(0, Math.min(100, percentage));
+                    this.style.width = percentage + '%';
+                };
+                const stopDrag = () => {
+                    document.removeEventListener('mousemove', updateWidth);
+                    document.removeEventListener('mouseup', stopDrag);
+                };
+                document.addEventListener('mousemove', updateWidth);
+                document.addEventListener('mouseup', stopDrag);
+            });
+        });
+
+        // Hantera språknivåer
+        document.querySelectorAll('[onclick="updateLanguageLevel(this)"]').forEach(container => {
+            updateLanguageLevel(container);
+        });
+
+        async function generatePDF() {
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.innerHTML = `
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                            background: white; padding: 20px; border-radius: 8px; z-index: 9999; 
+                            box-shadow: 0 0 20px rgba(0,0,0,0.2); text-align: center;">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                    <div>Skapar PDF...</div>
+                </div>
+            `;
+            document.body.appendChild(loadingIndicator);
+
+            try {
+                const element = document.querySelector('.max-w-5xl');
+                const buttonsToHide = document.querySelectorAll('.print-hidden, .delete-btn, .add-btn');
+                buttonsToHide.forEach(el => el.style.display = 'none');
+
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight,
+                    onclone: function(clonedDoc) {
+                        const clonedElement = clonedDoc.querySelector('.max-w-5xl');
+                        clonedElement.style.padding = '20px';
+                        clonedElement.style.margin = '0';
+                        clonedElement.style.width = '210mm';
+                        clonedElement.querySelectorAll('*').forEach(el => {
+                            if (el.classList.contains('fas') || el.classList.contains('fab') || el.classList.contains('far')) {
+                                el.style.fontFamily = '"Font Awesome 6 Free", "Font Awesome 6 Brands"';
+                                el.style.fontWeight = '900';
+                            }
+                        });
+                    }
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const pdf = new jspdf.jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                
+                // Beräkna antal sidor som behövs
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const pageCount = Math.ceil(pdfHeight / pageHeight);
+
+                // Lägg till varje del av bilden på en ny sida
+                for (let i = 0; i < pageCount; i++) {
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    const srcY = i * pageHeight * (imgProps.width / pdfWidth);
+                    const srcHeight = Math.min(pageHeight * (imgProps.width / pdfWidth), imgProps.height - srcY);
+                    const destHeight = (srcHeight * pdfWidth) / imgProps.width;
+
+                    pdf.addImage(
+                        imgData, 
+                        'JPEG', 
+                        0, 
+                        i === 0 ? 0 : -i * pageHeight, 
+                        pdfWidth, 
+                        pdfHeight
+                    );
+                }
+
+                pdf.save('cv.pdf');
+
+            } catch (error) {
+                console.error('PDF generation failed:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.innerHTML = `
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                                background: #ff4444; color: white; padding: 20px 40px; border-radius: 8px;
+                                z-index: 9999; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.2);">
+                        <div style="margin-bottom: 10px; font-weight: bold;">Kunde inte skapa PDF</div>
+                        <div style="font-size: 14px;">Vänligen försök igen</div>
+                    </div>
+                `;
+                document.body.appendChild(errorMessage);
+                setTimeout(() => errorMessage.remove(), 4000);
+            } finally {
+                buttonsToHide.forEach(el => el.style.display = '');
+                loadingIndicator.remove();
+            }
+        }
+
+        // Lägg till event listener för PDF-generering
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfButton = document.getElementById('download-pdf');
+            if (pdfButton) {
+                pdfButton.addEventListener('click', generatePDF);
+            }
+        });
+    </script>
 </body>
 </html>
+

@@ -62,45 +62,45 @@ func GenerateCV(c *gin.Context) {
 
 	templateData := data.TemplateData{
 		PersonligInfo: data.PersonligInfo{
-			Namn:    getStringValueFromMap(personligInfoMap, "namn", request.Name),
-			Titel:   getStringValueFromMap(personligInfoMap, "titel", request.JobTitle),
-			Bild:    getStringValueFromMap(personligInfoMap, "bild", "https://via.placeholder.com/150"),
+			Namn:    utils.GetStringValueFromMap(personligInfoMap, "namn", request.Name),
+			Titel:   utils.GetStringValueFromMap(personligInfoMap, "titel", request.JobTitle),
+			Bild:    utils.GetStringValueFromMap(personligInfoMap, "bild", "https://via.placeholder.com/150"),
 			Kontakt: []data.KontaktItem{
 				{
 					Typ:   "email",
-					Varde: getStringValueFromMap(kontaktMap, "email", request.Email),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "email", request.Email),
 					Ikon:  "📧",
 				},
 				{
 					Typ:   "telefon",
-					Varde: getStringValueFromMap(kontaktMap, "telefon", request.Phone),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "telefon", request.Phone),
 					Ikon:  "📱",
 				},
 				{
 					Typ:   "adress",
-					Varde: getStringValueFromMap(kontaktMap, "adress", request.Location),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "adress", request.Location),
 					Ikon:  "📍",
 				},
 				{
 					Typ:   "linkedin",
-					Varde: getStringValueFromMap(kontaktMap, "linkedin", "LinkedIn"),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "linkedin", "LinkedIn"),
 					Ikon:  "🔗",
 				},
 				{
 					Typ:   "github",
-					Varde: getStringValueFromMap(kontaktMap, "github", "GitHub"),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "github", "GitHub"),
 					Ikon:  "💻",
 				},
 				{
 					Typ:   "portfolio",
-					Varde: getStringValueFromMap(kontaktMap, "portfolio", "Portfolio"),
+					Varde: utils.GetStringValueFromMap(kontaktMap, "portfolio", "Portfolio"),
 					Ikon:  "🌐",
 				},
 			},
 		},
 		Fardigheter:         convertToStringSlice(aiResponse["fardigheter"]),
 		Sprak:               parseAISprak(aiResponse["sprak"]),
-		Profil:              getStringValue(aiResponse["profil"]),
+		Profil:              utils.GetStringValue(aiResponse["profil"]),
 		Arbetslivserfarenhet: parseAIExperience(aiResponse["arbetslivserfarenhet"]),
 		Utbildning:          parseAIEducation(aiResponse["utbildning"]),
 		Projekt:             convertToStringSlice(aiResponse["projekt"]),
@@ -264,17 +264,6 @@ func parseAISprak(input interface{}) []data.Sprak {
 		}
 	}
 	return result
-}
-
-// Ny hjälpfunktion för att hantera null-värden
-func getStringValue(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-	if str, ok := v.(string); ok {
-		return str
-	}
-	return ""
 }
 
 // Lägg till en ny funktion för att hämta strängvärden från map med default-värde

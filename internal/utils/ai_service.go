@@ -37,6 +37,8 @@ type CVPrompt struct {
 	Email          string
 	Phone          string
 	Location       string
+	SystemPrompt   string
+	UserPrompt     string
 }
 
 // HFStreamResponse representerar svarsstrukturen från Hugging Face streaming API
