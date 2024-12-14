@@ -125,10 +125,11 @@ func main() {
 	// Skapa en ny Gin router
 	router := gin.Default()
 
-	// Enkel CORS-konfiguration - låt Nginx hantera detaljerna
+	// CORS konfiguration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}  // Tillåt alla origins, Nginx kommer hantera begränsningarna
+	config.AllowOrigins = []string{"https://www.smidra.com"}
 	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	router.Use(cors.New(config))
 
 	// Prometheus middleware
