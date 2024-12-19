@@ -514,16 +514,17 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName stri
 				if ok && !seenJobs[jobID] {
 					seenJobs[jobID] = true
 
-					// Kontrollera om logotype finns och är en giltig sträng
-					if logotype, ok := adMap["logotype"].(string); ok && logotype != "" {
-						// Behåll logotypen om den finns och är giltig
-						allAds = append(allAds, adMap)
-					} else {
-						// Ta bort logotype-fältet om det är ogiltigt
-						delete(adMap, "logotype")
-						allAds = append(allAds, adMap)
+					// Ta bort logotype från annonsen
+					delete(adMap, "logotype")
+
+					// Ta även bort logotype från workplace.company om det finns
+					if workplace, ok := adMap["workplace"].(map[string]interface{}); ok {
+						if company, ok := workplace["company"].(map[string]interface{}); ok {
+							delete(company, "logotype")
+						}
 					}
 
+					allAds = append(allAds, adMap)
 					newAdsCount++
 					if maxJobs > 0 && len(allAds) >= maxJobs {
 						break
