@@ -2,7 +2,7 @@ module awesomeProject
 
 go 1.21
 
-toolchain go1.21.6
+toolchain go1.21.4
 
 require (
 	github.com/bytedance/sonic v1.12.3
