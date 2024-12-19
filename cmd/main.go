@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"os"
+	"time"
 )
 
 // Definiera metrics
@@ -125,12 +126,15 @@ func main() {
 	// Skapa en ny Gin router
 	router := gin.Default()
 
-	// CORS konfiguration
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"https://www.smidra.com"}
-	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
-	router.Use(cors.New(config))
+	// Lägg till CORS middleware
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Prometheus middleware
 	router.Use(prometheusMiddleware())

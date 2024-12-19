@@ -361,6 +361,39 @@ func fetchJobDetails(ctx context.Context, jobDetailURL, jobID string, maxRetries
 			return nil, fmt.Errorf("kunde inte avkoda jobbdetaljer: %v", err)
 		}
 
+		// Kontrollera logotyp URL om den finns
+		if logotype, ok := result["logotype"].(string); ok && logotype != "" {
+			// Skapa en HEAD request för att kontrollera om logotypen är tillgänglig
+			logoReq, err := http.NewRequest("HEAD", logotype, nil)
+			if err == nil {
+				logoResp, err := client.Do(logoReq)
+				if err == nil {
+					logoResp.Body.Close()
+					if logoResp.StatusCode == http.StatusNotFound {
+						delete(result, "logotype")
+					}
+				}
+			}
+		}
+
+		// Kontrollera även workplace.company.logotype om den finns
+		if workplace, ok := result["workplace"].(map[string]interface{}); ok {
+			if company, ok := workplace["company"].(map[string]interface{}); ok {
+				if logotype, ok := company["logotype"].(string); ok && logotype != "" {
+					logoReq, err := http.NewRequest("HEAD", logotype, nil)
+					if err == nil {
+						logoResp, err := client.Do(logoReq)
+						if err == nil {
+							logoResp.Body.Close()
+							if logoResp.StatusCode == http.StatusNotFound {
+								delete(company, "logotype")
+							}
+						}
+					}
+				}
+			}
+		}
+
 		return result, nil
 	}
 
@@ -480,7 +513,17 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName stri
 				jobID, ok := adMap["id"].(string)
 				if ok && !seenJobs[jobID] {
 					seenJobs[jobID] = true
-					allAds = append(allAds, adMap)
+
+					// Kontrollera om logotype finns och är en giltig sträng
+					if logotype, ok := adMap["logotype"].(string); ok && logotype != "" {
+						// Behåll logotypen om den finns och är giltig
+						allAds = append(allAds, adMap)
+					} else {
+						// Ta bort logotype-fältet om det är ogiltigt
+						delete(adMap, "logotype")
+						allAds = append(allAds, adMap)
+					}
+
 					newAdsCount++
 					if maxJobs > 0 && len(allAds) >= maxJobs {
 						break
