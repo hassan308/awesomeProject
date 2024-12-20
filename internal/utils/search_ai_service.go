@@ -21,6 +21,9 @@ type SearchAnalysis struct {
 	Job                string `json:"job"`
 	Municipality       string `json:"municipality"`
 	RequiresExperience *bool  `json:"requiresExperience"`
+	WorkExtent        string `json:"workExtent"`
+	Remote           string `json:"remote"`
+	DrivingLicense   string `json:"drivingLicense"`
 }
 
 // normalizeString normaliserar en sträng för jämförelse
@@ -108,17 +111,39 @@ Analysera följande jobbsökningsfråga och extrahera information.
 Om personen specifikt nämner att de söker jobb utan erfarenhetskrav eller entry-level/junior-positioner, sätt requiresExperience till false.
 Om personen specifikt söker senior-positioner eller jobb som kräver erfarenhet, sätt requiresExperience till true.
 Om personen inte nämner något om erfarenhet, sätt requiresExperience till null.
+
+För arbetstid (workExtent), använd följande regler:
+- Om personen nämner "heltid" eller "100%%", sätt workExtent till "947z_JGS_Uk2"
+- Om personen nämner "deltid", sätt workExtent till "947z_JGS_Uk3"
+- Om personen inte nämner arbetstid, sätt workExtent till ""
+
+För distansarbete (remote), använd följande regler:
+- Om personen nämner "distans", "remote", "på distans" eller "hemifrån", sätt remote till "true"
+- Om personen inte nämner något om distansarbete, sätt remote till ""
+
+För körkortskrav (drivingLicense), använd följande regler:
+- Om personen nämner "utan körkort", "ej körkort", "inget körkort" eller "körkort krävs ej", sätt drivingLicense till "false"
+- Om personen inte nämner något om körkort, sätt drivingLicense till ""
+
 Försök att förstå vad kunden söker för yrke och ge bra namn på yrke till jobb-falten samam sak för städer han bor i Sverige.
 Returnera ENDAST ett JSON-objekt med följande struktur:
 {
     "job": "extraherad jobbtitel",
     "municipality": "extraherad kommun/län (använd exakt namn från listan)",
-    "requiresExperience": false/true/null (baserat på erfarenhetskrav)
+    "requiresExperience": false/true/null (baserat på erfarenhetskrav),
+    "workExtent": "947z_JGS_Uk2"/"947z_JGS_Uk3"/"" (baserat på arbetstid),
+    "remote": "true"/"" (baserat på distansarbete),
+    "drivingLicense": "false"/"" (baserat på körkortskrav)
 }
 
 Exempel:
 - Om användaren skriver "jobb i gävleborg" -> municipality: "Gävleborgs län"
 - Om användaren skriver "jobb i gävle" -> municipality: "Gävle"
+- Om användaren skriver "heltidsjobb" -> workExtent: "947z_JGS_Uk2"
+- Om användaren skriver "deltidsjobb" -> workExtent: "947z_JGS_Uk3"
+- Om användaren skriver "distansjobb" -> remote: "true"
+- Om användaren skriver "jobb utan körkort" -> drivingLicense: "false"
+
 Om de är annat språk än svenska då ska alla objekt i JSON-objektet vara null viktigt.
 Sökfråga: %s`, query)
 

@@ -88,7 +88,7 @@ func SearchJobs(c *gin.Context) {
 
 	log.Printf("Söker efter jobb med term: '%s' i kommun: '%s'", request.SearchTerm, request.Municipality)
 
-	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.Municipality, request.MaxJobs, maxRecords, maxRetries, retryDelay)
+	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, request.SearchTerm, request.Municipality, request.MaxJobs, maxRecords, maxRetries, retryDelay, nil)
 	if err != nil {
 		log.Printf("Fel vid jobbsökning: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -367,7 +367,7 @@ func fetchJobDetails(ctx context.Context, jobDetailURL, jobID string, maxRetries
 	return nil, fmt.Errorf("kunde inte hämta jobbdetaljer efter %d försök", maxRetries)
 }
 
-func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName string, maxJobs, maxRecords, maxRetries int, retryDelay time.Duration) ([]map[string]interface{}, error) {
+func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName string, maxJobs, maxRecords, maxRetries int, retryDelay time.Duration, additionalFilters []map[string]string) ([]map[string]interface{}, error) {
 	var allAds []map[string]interface{}
 	seenJobs := make(map[string]bool)
 	startIndex := 0
@@ -430,6 +430,11 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName stri
 			filters = append(filters, locationFilter)
 		}
 
+		// Lägg till alla ytterligare filter
+		if len(additionalFilters) > 0 {
+			filters = append(filters, additionalFilters...)
+		}
+
 		payload := map[string]interface{}{
 			"filters":    filters,
 			"fromDate":   nil,
@@ -444,6 +449,12 @@ func fetchAllJobs(ctx context.Context, apiURL, searchTerm, municipalityName stri
 		if err != nil {
 			return nil, fmt.Errorf("fel vid JSON-marshalling: %v", err)
 		}
+
+		// Logga payload som skickas till Arbetsförmedlingen
+		log.Printf("\n=== PAYLOAD TILL ARBETSFÖRMEDLINGEN ===")
+		log.Printf("URL: %s", apiURL+"search")
+		prettyJSON, _ := json.MarshalIndent(payload, "", "  ")
+		log.Printf("Payload:\n%s", string(prettyJSON))
 
 		req, err := http.NewRequestWithContext(ctx, "POST", apiURL+"search", bytes.NewBuffer(jsonData))
 		if err != nil {

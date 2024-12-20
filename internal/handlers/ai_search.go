@@ -50,7 +50,47 @@ func AnalyzeSearchQuery(c *gin.Context) {
 
 	// Använd standard sökfunktionen med den extraherade söktermen och kommun
 	apiURL, jobDetailURL, maxRecords, defaultMaxJobs, maxRetries, retryDelay := getConfig()
-	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, searchTerm, analysis.Municipality, defaultMaxJobs, maxRecords, maxRetries, retryDelay)
+
+	// Lägg till workExtent i sökningen om det finns
+	var workExtentFilter map[string]string
+	if analysis.WorkExtent != "" {
+		workExtentFilter = map[string]string{
+			"type":  "workExtent",
+			"value": analysis.WorkExtent,
+		}
+	}
+
+	// Lägg till remote i sökningen om det finns
+	var remoteFilter map[string]string
+	if analysis.Remote == "true" {
+		remoteFilter = map[string]string{
+			"type":  "remote",
+			"value": "true",
+		}
+	}
+
+	// Lägg till körkortskrav i sökningen om det finns
+	var drivingLicenseFilter map[string]string
+	if analysis.DrivingLicense == "false" {
+		drivingLicenseFilter = map[string]string{
+			"type":  "drivingLicenseRequired",
+			"value": "false",
+		}
+	}
+
+	// Skapa en slice med alla filter
+	var filters []map[string]string
+	if workExtentFilter != nil {
+		filters = append(filters, workExtentFilter)
+	}
+	if remoteFilter != nil {
+		filters = append(filters, remoteFilter)
+	}
+	if drivingLicenseFilter != nil {
+		filters = append(filters, drivingLicenseFilter)
+	}
+
+	jobs, err := fetchAllJobs(c.Request.Context(), apiURL, searchTerm, analysis.Municipality, defaultMaxJobs, maxRecords, maxRetries, retryDelay, filters)
 	if err != nil {
 		log.Printf("Fel vid jobbsökning: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to fetch jobs: %v", err)})
