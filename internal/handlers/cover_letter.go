@@ -11,6 +11,7 @@ import (
 	"awesomeProject/internal/prompts"
 	"awesomeProject/internal/data"
 	"log"
+	"time"
 )
 
 type CoverLetterRequest struct {
@@ -111,11 +112,10 @@ func GenerateCoverLetter(c *gin.Context) {
 		CompanyName: request.CompanyName,
 	}
 
-	// Generera AI-innehåll
+	// Generera innehåll med AI
 	aiResponse, err := utils.GeneratePersonalLetter(prompt)
 	if err != nil {
-		log.Printf("Fel vid AI-generering av personligt brev: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Kunde inte generera personligt brev"})
+		c.JSON(500, gin.H{"error": "Kunde inte generera personligt brev: " + err.Error()})
 		return
 	}
 
@@ -146,6 +146,8 @@ func GenerateCoverLetter(c *gin.Context) {
 			Namn:     utils.GetStringValue(aiResponse["mottagare_namn"]),
 			Foretag:  request.CompanyName,
 			Position: utils.GetStringValue(aiResponse["mottagare_position"]),
+			Adress:   utils.GetStringValue(aiResponse["mottagare_adress"]),
+			PostOrt:  utils.GetStringValue(aiResponse["mottagare_postort"]),
 		},
 		Innehall: data.Innehall{
 			Inledning:     utils.GetStringValue(aiResponse["inledning"]),
@@ -153,7 +155,7 @@ func GenerateCoverLetter(c *gin.Context) {
 			Avslutning:    utils.GetStringValue(aiResponse["avslutning"]),
 			Halsningsfras: utils.GetStringValue(aiResponse["halsningsfras"]),
 		},
-		Datum: utils.GetStringValue(aiResponse["datum"]),
+		Datum: time.Now().Format("2006-01-02"),
 		Jobb: data.Jobb{
 			Titel:       request.JobTitle,
 			Beskrivning: request.JobDescription,
@@ -161,8 +163,14 @@ func GenerateCoverLetter(c *gin.Context) {
 		},
 	}
 
-	// Välj mall (just nu har vi bara creative)
-	templateFile := "cover-letter-creative.html"
+	// Välj mall baserat på templateId
+	var templateFile string
+	switch request.TemplateId {
+	case "v2":
+		templateFile = "cover-letter-v2.html"
+	default:
+		templateFile = "cover-letter-creative.html"
+	}
 
 	// Rendera template
 	tmpl, err := template.New(templateFile).ParseFiles("internal/templates/" + templateFile)

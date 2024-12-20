@@ -14,6 +14,8 @@ type Mottagare struct {
 	Namn     string `json:"namn"`
 	Foretag  string `json:"foretag"`
 	Position string `json:"position"`
+	Adress   string `json:"adress"`
+	PostOrt  string `json:"postort"`
 }
 
 // Innehall innehåller brevets olika delar
